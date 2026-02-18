@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { label: "Case Converter", href: "/case-converter" },
   { label: "Remove Duplicates", href: "/remove-duplicates" },
   { label: "Text to Speech", href: "/text-to-speech" },
+  { label: "FAQ", href: "/faq" },
 ];
 
 
