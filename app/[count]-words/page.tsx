@@ -45,7 +45,8 @@ const FAQ_ITEMS = (count: number) => [
 
 function getIntro(count: number) {
   const index = WORD_COUNTS.findIndex((value) => value === count);
-  const template = INTRO_TEMPLATES[index % INTRO_TEMPLATES.length];
+  const safeIndex = index >= 0 ? index : 0;
+  const template = INTRO_TEMPLATES[safeIndex % INTRO_TEMPLATES.length];
   return template.replace("{count}", String(count));
 }
 
