@@ -47,6 +47,20 @@ export function middleware(request: NextRequest) {
     return res;
   };
 
+  const isTextToSpeech = pathname.startsWith("/text-to-speech");
+  const limitResult = (isTextToSpeech ? TTS_LIMIT : DEFAULT_LIMIT).check(
+    `${ip}:${isTextToSpeech ? "tts" : "default"}`
+  );
+
+  const rateHeaders = {
+    "X-RateLimit-Limit": String(isTextToSpeech ? 30 : 120),
+    "X-RateLimit-Remaining": String(limitResult.remaining),
+    "X-RateLimit-Reset": String(Math.ceil(limitResult.resetMs / 1000)),
+  };
+  Object.entries(rateHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
   if (!isAllowedMethod(method)) {
     logSecurityEvent({
       event: "blocked_method",
@@ -62,20 +76,6 @@ export function middleware(request: NextRequest) {
     });
     return applySecurityHeaders(methodResponse);
   }
-
-  const isTextToSpeech = pathname.startsWith("/text-to-speech");
-  const limitResult = (isTextToSpeech ? TTS_LIMIT : DEFAULT_LIMIT).check(
-    `${ip}:${isTextToSpeech ? "tts" : "default"}`
-  );
-
-  const rateHeaders = {
-    "X-RateLimit-Limit": String(isTextToSpeech ? 30 : 120),
-    "X-RateLimit-Remaining": String(limitResult.remaining),
-    "X-RateLimit-Reset": String(Math.ceil(limitResult.resetMs / 1000)),
-  };
-  Object.entries(rateHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
 
   if (!limitResult.allowed) {
     logSecurityEvent({
