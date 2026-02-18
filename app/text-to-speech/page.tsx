@@ -358,7 +358,7 @@ export default function TextToSpeechPage() {
       </section>
 
       <section className="flex flex-wrap gap-3 text-sm font-semibold text-zinc-600">
-        <span>Try another tool:</span>
+        <span>Try also:</span>
         <Link className="text-zinc-900 underline" href="/word-counter">
           Word Counter
         </Link>
