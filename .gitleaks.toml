@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow known safe patterns"
+paths = [
+  '''.env.template'''
+]

@@ -27,6 +27,22 @@ To learn more about Next.js, take a look at the following resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
+## How to run tests
+
+```bash
+# Unit tests
+npm run test:unit
+
+# UI/component tests
+npm run test:ui
+
+# Full test suite
+npm test
+
+# End-to-end tests (Playwright)
+npm run test:e2e
+```
+
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
 ## Deploy on Vercel

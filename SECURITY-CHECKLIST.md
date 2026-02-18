@@ -1,0 +1,11 @@
+- Security headers applied to all responses (CSP, HSTS, no-sniff, referrer policy).
+- Frame protection enabled (frame-ancestors none, X-Frame-Options DENY).
+- Per-IP rate limiting for all pages; stricter for `/text-to-speech`.
+- Request body size limits enforced (100KB global, 20KB TTS).
+- Client input length caps (100k text, 5k TTS).
+- Speech synthesis timeout enforced to prevent abuse.
+- No unsafe HTML rendering (no `dangerouslySetInnerHTML`).
+- Structured security event logging without user text.
+- Lockfile enforcement and `npm audit` script available.
+- Secret scanning configuration added.
+- Security tests included (XSS, headers, rate limiting).
