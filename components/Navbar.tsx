@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { label: "Text to Speech", href: "/text-to-speech" },
 ];
 
+
 export default function Navbar() {
   return (
     <div className="sticky top-0 z-50 border-b border-white/70 bg-white/70 backdrop-blur">
