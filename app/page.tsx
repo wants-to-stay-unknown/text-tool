@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
@@ -33,26 +35,31 @@ export default function Home() {
               title: "Word Counter",
               description:
                 "Instantly count words, characters, sentences, and paragraphs.",
+              href: "/word-counter",
             },
             {
               title: "Case Converter",
               description:
                 "Switch between uppercase, lowercase, title case, and more.",
+              href: "/case-converter",
             },
             {
               title: "Remove Duplicate Lines",
               description:
                 "Clean lists and logs by removing repeated lines with one click.",
+              href: "/remove-duplicates",
             },
             {
               title: "Text to Speech",
               description:
                 "Listen to your text with natural voices and adjustable speed.",
+              href: "/text-to-speech",
             },
           ].map((tool) => (
-            <article
+            <Link
               key={tool.title}
-              className="group rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:border-zinc-300 hover:shadow-[0_28px_70px_-35px_rgba(15,23,42,0.45)]"
+              href={tool.href}
+              className="group rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:border-zinc-300 hover:shadow-[0_28px_70px_-35px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 text-sm font-semibold text-white">
                 {tool.title
@@ -66,11 +73,11 @@ export default function Home() {
               <p className="mt-2 text-sm leading-6 text-zinc-600">
                 {tool.description}
               </p>
-              <button className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900 transition group-hover:text-zinc-700">
+              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900 transition group-hover:text-zinc-700">
                 Open tool
                 <span className="text-base leading-none">→</span>
-              </button>
-            </article>
+              </span>
+            </Link>
           ))}
         </section>
       </div>
