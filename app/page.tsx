@@ -19,12 +19,12 @@ export default function Home() {
               clean, and listen to your text in seconds.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800">
+              <Link
+                href="/word-counter"
+                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800"
+              >
                 Start using tools
-              </button>
-              <button className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-900 transition hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-zinc-100">
-                View documentation
-              </button>
+              </Link>
             </div>
           </div>
         </header>
