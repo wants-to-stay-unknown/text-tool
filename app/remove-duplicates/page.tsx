@@ -11,8 +11,57 @@ import {
   removeDuplicates,
   type RemoveOptions,
 } from "../../lib/remove-duplicates";
+import Link from "next/link";
 
 const MAX_INPUT_CHARS = 100_000;
+const TOOL_URL = "https://text-tool.live/remove-duplicates";
+
+const TOOL_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Remove Duplicate Lines",
+  url: TOOL_URL,
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Web",
+  description:
+    "Remove duplicate lines from text with options for case sensitivity, trimming, and order preservation.",
+};
+
+const FAQ_ITEMS = [
+  {
+    question: "Does it keep the original order of lines?",
+    answer:
+      "Yes. When keep first is enabled, the original order is preserved.",
+  },
+  {
+    question: "Can I remove duplicates ignoring case?",
+    answer:
+      "Yes. Disable case sensitivity to compare lines without case differences.",
+  },
+  {
+    question: "What happens when trimming is enabled?",
+    answer:
+      "Lines are compared after trimming whitespace, while the original line is kept in the output.",
+  },
+  {
+    question: "Will this remove empty lines?",
+    answer:
+      "Yes. Enable the remove empty lines option to drop blank rows.",
+  },
+];
+
+const FAQ_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  })),
+};
 
 
 export default function RemoveDuplicatesPage() {
@@ -89,6 +138,8 @@ export default function RemoveDuplicatesPage() {
       title="Remove Duplicate Lines"
       description="Remove repeated lines while preserving the line break style in your text. Adjust the options to control how duplicates are detected."
     >
+      <script type="application/ld+json">{JSON.stringify(TOOL_JSON_LD)}</script>
+      <script type="application/ld+json">{JSON.stringify(FAQ_JSON_LD)}</script>
       <section className="grid gap-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)] sm:grid-cols-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
@@ -202,6 +253,36 @@ export default function RemoveDuplicatesPage() {
           <p>Trim mode compares trimmed lines, while output keeps the original line.</p>
           <p>When keep first is disabled, the last unique occurrence is kept.</p>
         </div>
+      </section>
+
+      <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
+        <h2 className="text-lg font-semibold text-zinc-900">FAQ</h2>
+        <div className="mt-4 space-y-3 text-sm text-zinc-600">
+          {FAQ_ITEMS.map((item) => (
+            <details
+              key={item.question}
+              className="rounded-2xl border border-zinc-200/80 bg-zinc-50 px-4 py-3"
+            >
+              <summary className="cursor-pointer text-sm font-semibold text-zinc-900">
+                {item.question}
+              </summary>
+              <p className="mt-2 text-sm text-zinc-600">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-wrap gap-3 text-sm font-semibold text-zinc-600">
+        <span>Try another tool:</span>
+        <Link className="text-zinc-900 underline" href="/word-counter">
+          Word Counter
+        </Link>
+        <Link className="text-zinc-900 underline" href="/case-converter">
+          Case Converter
+        </Link>
+        <Link className="text-zinc-900 underline" href="/text-to-speech">
+          Text to Speech
+        </Link>
       </section>
 
       {status ? (

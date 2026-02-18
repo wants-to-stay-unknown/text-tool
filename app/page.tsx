@@ -1,5 +1,15 @@
 import Link from "next/link";
 
+const HOME_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Text Tool",
+  url: "https://text-tool.live",
+  description:
+    "Fast, privacy-first text utilities including word counting, case conversion, duplicate line removal, and text to speech.",
+  inLanguage: "en",
+};
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
@@ -28,6 +38,10 @@ export default function Home() {
             </div>
           </div>
         </header>
+
+        <script type="application/ld+json">
+          {JSON.stringify(HOME_JSON_LD)}
+        </script>
 
         <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -79,6 +93,28 @@ export default function Home() {
               </span>
             </Link>
           ))}
+        </section>
+
+        <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
+          <h2 className="text-lg font-semibold text-zinc-900">Explore the tools</h2>
+          <p className="mt-2 text-sm text-zinc-600">
+            Jump straight into a tool or use them together to clean, format, and
+            review text before publishing.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
+            <Link className="underline" href="/word-counter">
+              Word Counter
+            </Link>
+            <Link className="underline" href="/case-converter">
+              Case Converter
+            </Link>
+            <Link className="underline" href="/remove-duplicates">
+              Remove Duplicate Lines
+            </Link>
+            <Link className="underline" href="/text-to-speech">
+              Text to Speech
+            </Link>
+          </div>
         </section>
       </div>
     </div>
