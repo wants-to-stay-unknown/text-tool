@@ -15,6 +15,7 @@ import Button from "../../components/Button";
 import TextArea from "../../components/TextArea";
 import ToolLayout from "../../components/ToolLayout";
 import TrackedLink from "../../components/TrackedLink";
+import ToolUseCaseGrid from "../../components/ToolUseCaseGrid";
 import {
   getTextMeta,
   trackClear,
@@ -25,8 +26,9 @@ import {
   trackToolSuccess,
   trackToolError,
   trackTTS,
+  trackToolUsed,
 } from "../../lib/analytics";
-import { getUseCasesByToolRoute, USE_CASE_BY_SLUG } from "../../lib/use-cases";
+import { USE_CASE_BY_SLUG } from "../../lib/use-cases";
 import {
   POST_ACTION_SUGGESTIONS,
   RELATED_TOOLS_BY_TOOL,
@@ -200,6 +202,10 @@ export default function TextToSpeechPage() {
       pitch,
       volume,
     });
+    trackToolUsed("text-to-speech", "play", {
+      voice: selectedVoice?.name ?? "unknown",
+      rate,
+    });
 
     const synth = window.speechSynthesis;
     synth.cancel();
@@ -238,6 +244,7 @@ export default function TextToSpeechPage() {
     window.speechSynthesis.pause();
     setStatus("paused");
     trackTTS("pause", { tool_name: "text-to-speech" });
+    trackToolUsed("text-to-speech", "pause");
   };
 
   const handleResume = () => {
@@ -247,6 +254,7 @@ export default function TextToSpeechPage() {
     window.speechSynthesis.resume();
     setStatus("speaking");
     trackTTS("play", { tool_name: "text-to-speech", resume: true });
+    trackToolUsed("text-to-speech", "resume");
   };
 
   const handleStop = () => {
@@ -257,6 +265,7 @@ export default function TextToSpeechPage() {
     window.speechSynthesis.cancel();
     setStatus("idle");
     trackTTS("end", { tool_name: "text-to-speech", stopped: true });
+    trackToolUsed("text-to-speech", "stop");
   };
 
   const handleClear = () => {
@@ -301,7 +310,6 @@ export default function TextToSpeechPage() {
 
   const tryNextRoutes = TRY_NEXT_BY_TOOL["/text-to-speech"];
   const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/text-to-speech"];
-  const popularUseCases = getUseCasesByToolRoute("/text-to-speech").slice(0, 6);
   const tips = TOOL_TIPS["/text-to-speech"];
   const postAction = POST_ACTION_SUGGESTIONS["/text-to-speech"];
   const postActionUseCase = USE_CASE_BY_SLUG[postAction.useCaseSlug];
@@ -475,7 +483,7 @@ export default function TextToSpeechPage() {
               key={route}
               href={route}
               eventName="click_try_next"
-              eventProps={{ from: "text-to-speech", to: route }}
+              eventProps={{ from_tool: "text-to-speech", to_tool: route }}
               className="underline"
             >
               {TOOL_BY_ROUTE[route]?.name}
@@ -490,28 +498,13 @@ export default function TextToSpeechPage() {
         availability.
       </p>
 
-      <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
-        <h2 className="text-lg font-semibold text-zinc-900">
-          Popular use cases for this tool
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          Use text to speech in real scenarios.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
-          <Link className="underline" href="/use-cases/text-to-speech">
-            View all text to speech use cases
-          </Link>
-          {popularUseCases.map((useCase) => (
-            <Link
-              key={useCase.slug}
-              className="underline"
-              href={`/use-cases/${useCase.slug}`}
-            >
-              {useCase.title}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <ToolUseCaseGrid
+        categorySlug="text-to-speech"
+        toolRoute="/text-to-speech"
+        title="Use cases for this tool"
+        description="Use text to speech in real scenarios."
+        categoryLabel="text to speech use cases"
+      />
 
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <h2 className="text-lg font-semibold text-zinc-900">Tips</h2>

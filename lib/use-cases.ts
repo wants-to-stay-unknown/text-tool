@@ -57,6 +57,35 @@ export function getUseCasesByCategorySlug(categorySlug: string) {
   );
 }
 
+export function getCategorySlugForToolRoute(toolRoute: string) {
+  return (
+    USE_CASE_CATEGORIES.find((category) =>
+      category.toolRoutes.includes(toolRoute),
+    )?.slug ?? "use-cases"
+  );
+}
+
+export function getRelatedUseCases(useCase: UseCase, limit = 3) {
+  const categorySlug = getCategorySlugForToolRoute(useCase.primaryToolRoute);
+  const categoryUseCases = getUseCasesByCategorySlug(categorySlug).filter(
+    (item) => item.slug !== useCase.slug,
+  );
+
+  const relatedFromList = useCase.relatedSlugs
+    .map((slug) => USE_CASE_BY_SLUG[slug])
+    .filter(
+      (item): item is UseCase =>
+        Boolean(item) &&
+        getCategorySlugForToolRoute(item.primaryToolRoute) === categorySlug,
+    );
+
+  const fallback = categoryUseCases.filter(
+    (item) => !relatedFromList.some((related) => related.slug === item.slug),
+  );
+
+  return [...relatedFromList, ...fallback].slice(0, limit);
+}
+
 export function getAlternateToolRoute(primaryToolRoute: string) {
   const alternate = TOOLS.find((tool) => tool.route !== primaryToolRoute);
   return alternate?.route ?? "/word-counter";

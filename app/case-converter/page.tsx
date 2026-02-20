@@ -13,6 +13,7 @@ import TextArea from "../../components/TextArea";
 import ToolLayout from "../../components/ToolLayout";
 import AnalyticsEvent from "../../components/AnalyticsEvent";
 import TrackedLink from "../../components/TrackedLink";
+import ToolUseCaseGrid from "../../components/ToolUseCaseGrid";
 import {
   getTextMeta,
   trackClear,
@@ -21,6 +22,7 @@ import {
   trackPaste,
   trackToolRun,
   trackToolSuccess,
+  trackToolUsed,
 } from "../../lib/analytics";
 import { sanitizeText } from "../../lib/text-safety";
 import {
@@ -30,7 +32,7 @@ import {
   type CaseMode,
 } from "../../lib/case-converter";
 import Link from "next/link";
-import { getUseCasesByToolRoute, USE_CASE_BY_SLUG } from "../../lib/use-cases";
+import { USE_CASE_BY_SLUG } from "../../lib/use-cases";
 import {
   POST_ACTION_SUGGESTIONS,
   RELATED_TOOLS_BY_TOOL,
@@ -193,7 +195,6 @@ export default function CaseConverterPage() {
 
   const tryNextRoutes = TRY_NEXT_BY_TOOL["/case-converter"];
   const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/case-converter"];
-  const popularUseCases = getUseCasesByToolRoute("/case-converter").slice(0, 6);
   const tips = TOOL_TIPS["/case-converter"];
   const postAction = POST_ACTION_SUGGESTIONS["/case-converter"];
   const postActionUseCase = USE_CASE_BY_SLUG[postAction.useCaseSlug];
@@ -296,6 +297,7 @@ export default function CaseConverterPage() {
                     ...outputMeta,
                     mode: option,
                   });
+                  trackToolUsed("case-converter", "convert", { mode: option });
                 }
               }}
               variant={mode === option ? "primary" : "secondary"}
@@ -337,7 +339,7 @@ export default function CaseConverterPage() {
               key={route}
               href={route}
               eventName="click_try_next"
-              eventProps={{ from: "case-converter", to: route }}
+              eventProps={{ from_tool: "case-converter", to_tool: route }}
               className="underline"
             >
               {TOOL_BY_ROUTE[route]?.name}
@@ -346,28 +348,13 @@ export default function CaseConverterPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
-        <h2 className="text-lg font-semibold text-zinc-900">
-          Popular use cases for this tool
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          Use case guides to fix case fast.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
-          <Link className="underline" href="/use-cases/case-format">
-            View all case & format use cases
-          </Link>
-          {popularUseCases.map((useCase) => (
-            <Link
-              key={useCase.slug}
-              className="underline"
-              href={`/use-cases/${useCase.slug}`}
-            >
-              {useCase.title}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <ToolUseCaseGrid
+        categorySlug="case-format"
+        toolRoute="/case-converter"
+        title="Use cases for this tool"
+        description="Use case guides to fix case fast."
+        categoryLabel="case & format use cases"
+      />
 
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <h2 className="text-lg font-semibold text-zinc-900">Tips</h2>

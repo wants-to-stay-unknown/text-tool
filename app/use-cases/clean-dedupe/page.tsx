@@ -31,6 +31,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CleanDedupeUseCasesPage() {
-  return <UseCaseCategoryPage categorySlug="clean-dedupe" />;
+type PageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default function CleanDedupeUseCasesPage({ searchParams }: PageProps) {
+  return (
+    <UseCaseCategoryPage categorySlug="clean-dedupe" searchParams={searchParams} />
+  );
 }

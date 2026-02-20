@@ -15,13 +15,25 @@ type UseCaseCategoryPageProps = {
   toolRoute?: string;
   title?: string;
   description?: string;
+  searchParams?: Record<string, string | string[] | undefined>;
 };
+
+type SortOption = "title_asc" | "title_desc";
+
+function getSearchParam(
+  searchParams: UseCaseCategoryPageProps["searchParams"],
+  key: string,
+) {
+  const value = searchParams?.[key];
+  return typeof value === "string" ? value : "";
+}
 
 export default function UseCaseCategoryPage({
   categorySlug,
   toolRoute,
   title,
   description,
+  searchParams,
 }: UseCaseCategoryPageProps) {
   const category = categorySlug
     ? USE_CASE_CATEGORIES.find((item) => item.slug === categorySlug)
@@ -29,7 +41,7 @@ export default function UseCaseCategoryPage({
 
   const resolvedToolRoute = toolRoute ?? category?.toolRoutes[0];
   const tool = resolvedToolRoute ? TOOL_BY_ROUTE[resolvedToolRoute] : null;
-  const useCases = categorySlug
+  const baseUseCases = categorySlug
     ? getUseCasesByCategorySlug(categorySlug)
     : resolvedToolRoute
       ? getUseCasesByToolRoute(resolvedToolRoute)
@@ -37,6 +49,30 @@ export default function UseCaseCategoryPage({
   const popularUseCases = POPULAR_USE_CASE_SLUGS.map(
     (slug) => USE_CASE_BY_SLUG[slug],
   ).filter(Boolean);
+
+  const rawQuery = getSearchParam(searchParams, "q").trim();
+  const query = rawQuery.toLowerCase();
+  const sort = (getSearchParam(searchParams, "sort") || "title_asc") as SortOption;
+  const toolFilter = getSearchParam(searchParams, "tool");
+
+  const filteredByTool =
+    toolFilter && toolFilter !== "all"
+      ? baseUseCases.filter((useCase) => useCase.primaryToolRoute === toolFilter)
+      : baseUseCases;
+
+  const filteredUseCases = query
+    ? filteredByTool.filter((useCase) => {
+        const haystack = `${useCase.title} ${useCase.description} ${useCase.h1}`.toLowerCase();
+        return haystack.includes(query);
+      })
+    : filteredByTool;
+
+  const sortedUseCases = [...filteredUseCases].sort((a, b) => {
+    if (sort === "title_desc") {
+      return b.title.localeCompare(a.title);
+    }
+    return a.title.localeCompare(b.title);
+  });
 
   return (
     <ToolLayout
@@ -78,8 +114,76 @@ export default function UseCaseCategoryPage({
         </div>
       </section>
 
+      <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-sm">
+        <form className="grid gap-4 sm:grid-cols-3" method="get">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Search
+            </label>
+            <input
+              type="search"
+              name="q"
+              defaultValue={rawQuery}
+              placeholder="Search use cases"
+              className="rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-700 shadow-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Tool filter
+            </label>
+            <select
+              name="tool"
+              defaultValue={toolFilter || "all"}
+              className="rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-700 shadow-sm"
+            >
+              <option value="all">All tools</option>
+              {(category?.toolRoutes ?? (resolvedToolRoute ? [resolvedToolRoute] : [])).map(
+                (route) => (
+                  <option key={route} value={route}>
+                    {TOOL_BY_ROUTE[route]?.name ?? route}
+                  </option>
+                ),
+              )}
+            </select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Sort
+            </label>
+            <select
+              name="sort"
+              defaultValue={sort}
+              className="rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-700 shadow-sm"
+            >
+              <option value="title_asc">Title A–Z</option>
+              <option value="title_desc">Title Z–A</option>
+            </select>
+          </div>
+          <div className="sm:col-span-3 flex flex-wrap gap-3">
+            <button
+              type="submit"
+              className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
+            >
+              Apply filters
+            </button>
+            {(query || toolFilter || sort !== "title_asc") && (
+              <Link
+                href={categorySlug ? `/use-cases/${categorySlug}` : "/use-cases"}
+                className="rounded-full border border-zinc-200 bg-white px-5 py-2 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:text-zinc-900"
+              >
+                Clear filters
+              </Link>
+            )}
+          </div>
+        </form>
+        <p className="mt-4 text-sm text-zinc-600">
+          Showing {sortedUseCases.length} use cases.
+        </p>
+      </section>
+
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {useCases.map((useCase) => (
+        {sortedUseCases.map((useCase) => (
           <Link
             key={useCase.slug}
             href={`/use-cases/${useCase.slug}`}

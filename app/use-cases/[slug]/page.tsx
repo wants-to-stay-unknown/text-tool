@@ -7,9 +7,10 @@ import TrackedLink from "../../../components/TrackedLink";
 import ToolLayout from "../../../components/ToolLayout";
 import {
   USE_CASE_BY_SLUG,
-  getAlternateToolRoute,
+  getCategorySlugForToolRoute,
+  getRelatedUseCases,
 } from "../../../lib/use-cases";
-import { TOOL_BY_ROUTE } from "../../../lib/tools";
+import { getCrossClusterToolRoutes, TOOL_BY_ROUTE } from "../../../lib/tools";
 
 const BASE_URL = "https://text-tool.live";
 
@@ -95,11 +96,12 @@ export default async function UseCasePage({ params }: PageProps) {
   }
 
   const primaryTool = TOOL_BY_ROUTE[useCase.primaryToolRoute];
-  const alternateToolRoute = getAlternateToolRoute(useCase.primaryToolRoute);
-  const alternateTool = TOOL_BY_ROUTE[alternateToolRoute];
-  const relatedUseCases = useCase.relatedSlugs
-    .map((slug) => USE_CASE_BY_SLUG[slug])
-    .filter(Boolean);
+  const relatedUseCases = getRelatedUseCases(useCase, 3);
+  const alsoTryRoutes = getCrossClusterToolRoutes(
+    useCase.primaryToolRoute,
+    2,
+  );
+  const categorySlug = getCategorySlugForToolRoute(useCase.primaryToolRoute);
 
   const faqJsonLd = getFaqJsonLd(useCase.slug);
 
@@ -109,7 +111,10 @@ export default async function UseCasePage({ params }: PageProps) {
       description={useCase.description}
       maxWidthClassName="max-w-5xl"
     >
-      <AnalyticsEvent event="use_case_page_view" props={{ slug: useCase.slug }} />
+      <AnalyticsEvent
+        event="use_case_view"
+        props={{ slug: useCase.slug, category: categorySlug }}
+      />
       {faqJsonLd ? (
         <script type="application/ld+json">
           {JSON.stringify(faqJsonLd)}
@@ -182,14 +187,17 @@ export default async function UseCasePage({ params }: PageProps) {
         </div>
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-600">
           <span>Also try:</span>
-          <TrackedLink
-            className="text-zinc-900 underline"
-            href={alternateToolRoute}
-            eventName="click_tool_from_use_case"
-            eventProps={{ slug: useCase.slug, tool: alternateToolRoute }}
-          >
-            {alternateTool?.name}
-          </TrackedLink>
+          {alsoTryRoutes.map((route) => (
+            <TrackedLink
+              key={route}
+              className="text-zinc-900 underline"
+              href={route}
+              eventName="click_tool_from_use_case"
+              eventProps={{ slug: useCase.slug, tool: route }}
+            >
+              {TOOL_BY_ROUTE[route]?.name}
+            </TrackedLink>
+          ))}
         </div>
       </section>
 

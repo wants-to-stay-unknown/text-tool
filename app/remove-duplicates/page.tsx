@@ -13,6 +13,7 @@ import TextArea from "../../components/TextArea";
 import ToolLayout from "../../components/ToolLayout";
 import AnalyticsEvent from "../../components/AnalyticsEvent";
 import TrackedLink from "../../components/TrackedLink";
+import ToolUseCaseGrid from "../../components/ToolUseCaseGrid";
 import {
   getTextMeta,
   trackClear,
@@ -21,6 +22,7 @@ import {
   trackPaste,
   trackToolRun,
   trackToolSuccess,
+  trackToolUsed,
 } from "../../lib/analytics";
 import { sanitizeText } from "../../lib/text-safety";
 import {
@@ -29,7 +31,7 @@ import {
   type RemoveOptions,
 } from "../../lib/remove-duplicates";
 import Link from "next/link";
-import { getUseCasesByToolRoute, USE_CASE_BY_SLUG } from "../../lib/use-cases";
+import { USE_CASE_BY_SLUG } from "../../lib/use-cases";
 import {
   POST_ACTION_SUGGESTIONS,
   RELATED_TOOLS_BY_TOOL,
@@ -229,6 +231,7 @@ export default function RemoveDuplicatesPage() {
       removed_count: result.removedDuplicates,
       action: "download",
     });
+    trackToolUsed("remove-duplicates", "download");
   };
 
   const handleProcess = () => {
@@ -253,11 +256,11 @@ export default function RemoveDuplicatesPage() {
       output_lines: result.uniqueLines,
       removed_count: result.removedDuplicates,
     });
+    trackToolUsed("remove-duplicates", "process");
   };
 
   const tryNextRoutes = TRY_NEXT_BY_TOOL["/remove-duplicates"];
   const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/remove-duplicates"];
-  const popularUseCases = getUseCasesByToolRoute("/remove-duplicates").slice(0, 6);
   const tips = TOOL_TIPS["/remove-duplicates"];
   const postAction = POST_ACTION_SUGGESTIONS["/remove-duplicates"];
   const postActionUseCase = USE_CASE_BY_SLUG[postAction.useCaseSlug];
@@ -450,7 +453,7 @@ export default function RemoveDuplicatesPage() {
               key={route}
               href={route}
               eventName="click_try_next"
-              eventProps={{ from: "remove-duplicates", to: route }}
+              eventProps={{ from_tool: "remove-duplicates", to_tool: route }}
               className="underline"
             >
               {TOOL_BY_ROUTE[route]?.name}
@@ -459,28 +462,13 @@ export default function RemoveDuplicatesPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
-        <h2 className="text-lg font-semibold text-zinc-900">
-          Popular use cases for this tool
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          Clean lists with a focused workflow.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
-          <Link className="underline" href="/use-cases/clean-dedupe">
-            View all clean & dedupe use cases
-          </Link>
-          {popularUseCases.map((useCase) => (
-            <Link
-              key={useCase.slug}
-              className="underline"
-              href={`/use-cases/${useCase.slug}`}
-            >
-              {useCase.title}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <ToolUseCaseGrid
+        categorySlug="clean-dedupe"
+        toolRoute="/remove-duplicates"
+        title="Use cases for this tool"
+        description="Clean lists with a focused workflow."
+        categoryLabel="clean & dedupe use cases"
+      />
 
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <h2 className="text-lg font-semibold text-zinc-900">Tips</h2>

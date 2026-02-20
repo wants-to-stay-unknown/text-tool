@@ -10,6 +10,7 @@ import {
   trackPaste,
   trackToolRun,
   trackToolSuccess,
+  trackToolUsed,
 } from "../lib/analytics";
 import { sanitizeText } from "../lib/text-safety";
 import { countTextStats } from "../lib/word-counter";
@@ -145,6 +146,7 @@ export default function WordCounterTool({ onUse }: WordCounterToolProps) {
               const meta = getTextMeta(nextValue);
               trackToolRun("word-counter", meta);
               trackToolSuccess("word-counter", meta);
+              trackToolUsed("word-counter", "input");
               onUse?.();
             }
             if (nextValue.trim()) {

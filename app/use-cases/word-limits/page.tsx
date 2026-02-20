@@ -31,6 +31,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WordLimitsUseCasesPage() {
-  return <UseCaseCategoryPage categorySlug="word-limits" />;
+type PageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default function WordLimitsUseCasesPage({ searchParams }: PageProps) {
+  return (
+    <UseCaseCategoryPage
+      categorySlug="word-limits"
+      searchParams={searchParams}
+    />
+  );
 }

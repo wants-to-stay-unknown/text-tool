@@ -31,14 +31,14 @@
 ## Internal linking rules
 - Every tool page must link to:
   - "Try next" panel (3 tool links)
-  - "Popular use cases for this tool" (category + 6 pages)
+  - "Use cases for this tool" grid (8 pages + category link)
   - "Related tools" links
   - Post-action suggestion strip after tool use
   - Tips accordion linking to use-cases or tools
 - Every use-case page must link to:
   - the primary tool CTA
   - 3 related use-cases
-  - one alternate tool link
+  - two cross-cluster tool links
   - the related use-case category page
 - Homepage must link to:
   - all tools
@@ -49,5 +49,5 @@
 - `tool_page_view`
 - `tool_used`
 - `click_try_next`
-- `use_case_page_view`
+- `use_case_view`
 - `click_tool_from_use_case`

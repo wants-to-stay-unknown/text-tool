@@ -3,8 +3,8 @@ import Link from "next/link";
 import AnalyticsEvent from "../../components/AnalyticsEvent";
 import ToolLayout from "../../components/ToolLayout";
 import TrackedLink from "../../components/TrackedLink";
+import ToolUseCaseGrid from "../../components/ToolUseCaseGrid";
 import WordCounterExperience from "../../components/WordCounterExperience";
-import { getUseCasesByToolRoute } from "../../lib/use-cases";
 import {
   RELATED_TOOLS_BY_TOOL,
   TOOL_BY_ROUTE,
@@ -64,7 +64,6 @@ const FAQ_JSON_LD = {
 export default function WordCounterPage() {
   const tryNextRoutes = TRY_NEXT_BY_TOOL["/word-counter"];
   const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/word-counter"];
-  const popularUseCases = getUseCasesByToolRoute("/word-counter").slice(0, 6);
   const tips = TOOL_TIPS["/word-counter"];
 
   return (
@@ -89,7 +88,7 @@ export default function WordCounterPage() {
                   key={route}
                   href={route}
                   eventName="click_try_next"
-                  eventProps={{ from: "word-counter", to: route }}
+                  eventProps={{ from_tool: "word-counter", to_tool: route }}
                   className="underline"
                 >
                   {TOOL_BY_ROUTE[route]?.name}
@@ -100,28 +99,13 @@ export default function WordCounterPage() {
         }
       />
 
-      <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
-        <h2 className="text-lg font-semibold text-zinc-900">
-          Popular use cases for this tool
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          Jump into a real workflow and use the word counter in context.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
-          <Link className="underline" href="/use-cases/word-limits">
-            View all word & limits use cases
-          </Link>
-          {popularUseCases.map((useCase) => (
-            <Link
-              key={useCase.slug}
-              className="underline"
-              href={`/use-cases/${useCase.slug}`}
-            >
-              {useCase.title}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <ToolUseCaseGrid
+        categorySlug="word-limits"
+        toolRoute="/word-counter"
+        title="Use cases for this tool"
+        description="Jump into a real workflow and use the word counter in context."
+        categoryLabel="word & limits use cases"
+      />
 
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <h2 className="text-lg font-semibold text-zinc-900">Tips</h2>

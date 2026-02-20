@@ -63,12 +63,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - `tool_run`: `tool_name`, input meta, options meta, `session_id`, `visitor_id`
 - `tool_success`: `tool_name`, output meta, `session_id`, `visitor_id`
 - `tool_error`: `tool_name`, `error_type`, `session_id`, `visitor_id`
+- `tool_used`: `tool_name`, `action`, meta, `session_id`, `visitor_id`
 - `copy`: `tool_name`, `target`, meta, `session_id`, `visitor_id`
 - `paste`: `tool_name`, meta, `session_id`, `visitor_id`
 - `clear`: `tool_name`, `session_id`, `visitor_id`
 - `tts`: `action`, `tool_name`, `session_id`, `visitor_id`
-- `use_case_page_view`: `slug`, `session_id`, `visitor_id`
-- `click_try_next`: `from`, `to`, `session_id`, `visitor_id`
+- `use_case_view`: `slug`, `category`, `session_id`, `visitor_id`
+- `click_try_next`: `from_tool`, `to_tool`, `session_id`, `visitor_id`
 - `click_tool_from_use_case`: `slug`, `tool`, `session_id`, `visitor_id`
 - `client_error`: `error_type`, `error_name`, `session_id`, `visitor_id`
 

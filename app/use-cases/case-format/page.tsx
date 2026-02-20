@@ -31,6 +31,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CaseFormatUseCasesPage() {
-  return <UseCaseCategoryPage categorySlug="case-format" />;
+type PageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default function CaseFormatUseCasesPage({ searchParams }: PageProps) {
+  return (
+    <UseCaseCategoryPage categorySlug="case-format" searchParams={searchParams} />
+  );
 }

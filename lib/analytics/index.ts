@@ -171,6 +171,18 @@ export function trackToolSuccess(toolName: string, outputMeta: AnalyticsMeta) {
   });
 }
 
+export function trackToolUsed(
+  toolName: string,
+  action: string,
+  meta?: AnalyticsMeta,
+) {
+  trackEvent("tool_used", {
+    tool_name: toolName,
+    action,
+    ...meta,
+  });
+}
+
 export function trackToolError(toolName: string, errorMeta: AnalyticsMeta) {
   trackEvent("tool_error", {
     tool_name: toolName,
@@ -222,6 +234,13 @@ export function trackToolSelect(
     item_id: toolName,
     context,
     ...meta,
+  });
+}
+
+export function trackUseCaseView(slug: string, category: string) {
+  trackEvent("use_case_view", {
+    slug,
+    category,
   });
 }
 

@@ -15,6 +15,7 @@ import Button from "../../components/Button";
 import TextArea from "../../components/TextArea";
 import ToolLayout from "../../components/ToolLayout";
 import TrackedLink from "../../components/TrackedLink";
+import ToolUseCaseGrid from "../../components/ToolUseCaseGrid";
 import {
   getTextMeta,
   trackClear,
@@ -23,11 +24,12 @@ import {
   trackPaste,
   trackToolRun,
   trackToolSuccess,
+  trackToolUsed,
 } from "../../lib/analytics";
 import { CHARACTER_PRESETS } from "../../lib/character-counter";
 import { countTextStats } from "../../lib/word-counter";
 import { sanitizeText } from "../../lib/text-safety";
-import { getUseCasesByToolRoute, USE_CASE_BY_SLUG } from "../../lib/use-cases";
+import { USE_CASE_BY_SLUG } from "../../lib/use-cases";
 import {
   POST_ACTION_SUGGESTIONS,
   RELATED_TOOLS_BY_TOOL,
@@ -142,7 +144,6 @@ export default function CharacterCounterPage() {
 
   const tryNextRoutes = TRY_NEXT_BY_TOOL["/character-counter"];
   const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/character-counter"];
-  const popularUseCases = getUseCasesByToolRoute("/character-counter").slice(0, 6);
   const tips = TOOL_TIPS["/character-counter"];
   const postAction = POST_ACTION_SUGGESTIONS["/character-counter"];
   const postActionUseCase = USE_CASE_BY_SLUG[postAction.useCaseSlug];
@@ -220,6 +221,9 @@ export default function CharacterCounterPage() {
               const meta = getTextMeta(nextValue);
               trackToolRun("character-counter", meta, { preset: preset?.id });
               trackToolSuccess("character-counter", meta);
+              trackToolUsed("character-counter", "input", {
+                preset: preset?.id,
+              });
               setHasUsed(true);
             }
             if (nextValue.trim()) {
@@ -275,7 +279,7 @@ export default function CharacterCounterPage() {
               key={route}
               href={route}
               eventName="click_try_next"
-              eventProps={{ from: "character-counter", to: route }}
+              eventProps={{ from_tool: "character-counter", to_tool: route }}
               className="underline"
             >
               {TOOL_BY_ROUTE[route]?.name}
@@ -284,28 +288,13 @@ export default function CharacterCounterPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
-        <h2 className="text-lg font-semibold text-zinc-900">
-          Popular use cases for this tool
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          Use character limits confidently across platforms.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
-          <Link className="underline" href="/use-cases/word-limits">
-            View all word & limits use cases
-          </Link>
-          {popularUseCases.map((useCase) => (
-            <Link
-              key={useCase.slug}
-              className="underline"
-              href={`/use-cases/${useCase.slug}`}
-            >
-              {useCase.title}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <ToolUseCaseGrid
+        categorySlug="word-limits"
+        toolRoute="/character-counter"
+        title="Use cases for this tool"
+        description="Use character limits confidently across platforms."
+        categoryLabel="word & limits use cases"
+      />
 
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <h2 className="text-lg font-semibold text-zinc-900">Tips</h2>

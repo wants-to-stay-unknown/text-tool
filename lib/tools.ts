@@ -31,9 +31,68 @@ const EXTRA_TOOLS: Tool[] = [
 
 export const TOOLS: Tool[] = [...CLUSTER_TOOLS, ...EXTRA_TOOLS];
 
+const TOOL_CLUSTER_MAP = new Map<string, string>();
+for (const cluster of CLUSTERS) {
+  for (const tool of cluster.tools) {
+    TOOL_CLUSTER_MAP.set(tool.route, cluster.slug);
+  }
+}
+TOOL_CLUSTER_MAP.set("/text-to-speech", "text-to-speech");
+
 export const TOOL_BY_ROUTE = Object.fromEntries(
   TOOLS.map((tool) => [tool.route, tool]),
 ) as Record<string, Tool>;
+
+export function getClusterSlugForToolRoute(route: string) {
+  return TOOL_CLUSTER_MAP.get(route) ?? "text-to-speech";
+}
+
+export function getCrossClusterToolRoutes(
+  primaryToolRoute: string,
+  count = 2,
+) {
+  const primaryCluster = getClusterSlugForToolRoute(primaryToolRoute);
+  const toolRoutesByCluster = new Map<string, string[]>();
+
+  for (const tool of TOOLS) {
+    const cluster = getClusterSlugForToolRoute(tool.route);
+    const existing = toolRoutesByCluster.get(cluster) ?? [];
+    existing.push(tool.route);
+    toolRoutesByCluster.set(cluster, existing);
+  }
+
+  const orderedClusters = [
+    ...CLUSTERS.map((cluster) => cluster.slug),
+    "text-to-speech",
+  ];
+
+  const picks: string[] = [];
+  for (const cluster of orderedClusters) {
+    if (cluster === primaryCluster) {
+      continue;
+    }
+    const routes = toolRoutesByCluster.get(cluster) ?? [];
+    if (routes.length > 0) {
+      picks.push(routes[0]);
+    }
+  }
+
+  if (picks.length < count) {
+    const fallback = TOOLS.filter(
+      (tool) => getClusterSlugForToolRoute(tool.route) !== primaryCluster,
+    ).map((tool) => tool.route);
+    for (const route of fallback) {
+      if (!picks.includes(route)) {
+        picks.push(route);
+      }
+      if (picks.length >= count) {
+        break;
+      }
+    }
+  }
+
+  return picks.slice(0, count);
+}
 
 export const TRY_NEXT_BY_TOOL: Record<string, string[]> = {
   "/word-counter": [
