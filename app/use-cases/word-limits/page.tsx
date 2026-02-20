@@ -32,14 +32,17 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function WordLimitsUseCasesPage({ searchParams }: PageProps) {
+export default async function WordLimitsUseCasesPage({
+  searchParams,
+}: PageProps) {
+  const resolvedSearchParams = await searchParams;
   return (
     <UseCaseCategoryPage
       categorySlug="word-limits"
-      searchParams={searchParams}
+      searchParams={resolvedSearchParams}
     />
   );
 }

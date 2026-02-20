@@ -32,11 +32,17 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function CaseFormatUseCasesPage({ searchParams }: PageProps) {
+export default async function CaseFormatUseCasesPage({
+  searchParams,
+}: PageProps) {
+  const resolvedSearchParams = await searchParams;
   return (
-    <UseCaseCategoryPage categorySlug="case-format" searchParams={searchParams} />
+    <UseCaseCategoryPage
+      categorySlug="case-format"
+      searchParams={resolvedSearchParams}
+    />
   );
 }

@@ -32,11 +32,17 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function CleanDedupeUseCasesPage({ searchParams }: PageProps) {
+export default async function CleanDedupeUseCasesPage({
+  searchParams,
+}: PageProps) {
+  const resolvedSearchParams = await searchParams;
   return (
-    <UseCaseCategoryPage categorySlug="clean-dedupe" searchParams={searchParams} />
+    <UseCaseCategoryPage
+      categorySlug="clean-dedupe"
+      searchParams={resolvedSearchParams}
+    />
   );
 }
