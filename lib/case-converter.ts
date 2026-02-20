@@ -3,7 +3,9 @@ export type CaseMode =
   | "lowercase"
   | "title"
   | "sentence"
-  | "toggle";
+  | "toggle"
+  | "camelToSnake"
+  | "snakeToCamel";
 
 export const MODE_HELP: Record<CaseMode, string> = {
   uppercase: "All letters become uppercase.",
@@ -11,6 +13,8 @@ export const MODE_HELP: Record<CaseMode, string> = {
   title: "Capitalize the first letter of each word.",
   sentence: "Capitalize the first letter of each sentence.",
   toggle: "Swap each letter's case.",
+  camelToSnake: "Convert camelCase identifiers to snake_case.",
+  snakeToCamel: "Convert snake_case identifiers to camelCase.",
 };
 
 export const MODE_LABEL: Record<CaseMode, string> = {
@@ -19,6 +23,8 @@ export const MODE_LABEL: Record<CaseMode, string> = {
   title: "Title Case",
   sentence: "Sentence case",
   toggle: "Toggle Case",
+  camelToSnake: "camelCase → snake_case",
+  snakeToCamel: "snake_case → camelCase",
 };
 
 const WORD_REGEX = /[A-Za-z0-9]+/g;
@@ -64,6 +70,20 @@ export function toToggleCase(value: string) {
   );
 }
 
+export function toSnakeCase(value: string) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/[\s-]+/g, "_")
+    .replace(/__+/g, "_")
+    .toLowerCase();
+}
+
+export function toCamelCase(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[_-\s]+([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+}
+
 export function applyCaseMode(value: string, mode: CaseMode) {
   switch (mode) {
     case "uppercase":
@@ -76,6 +96,10 @@ export function applyCaseMode(value: string, mode: CaseMode) {
       return toSentenceCase(value);
     case "toggle":
       return toToggleCase(value);
+    case "camelToSnake":
+      return toSnakeCase(value);
+    case "snakeToCamel":
+      return toCamelCase(value);
     default:
       return value;
   }

@@ -50,3 +50,30 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Analytics (GA4 + Vercel)
+
+### Environment variable
+- `NEXT_PUBLIC_GA_ID` (preferred) or `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+
+### Event names and key params
+- `page_view`: `page_location`, `page_path`, `page_title`, `session_id`, `visitor_id`
+- `select_content`: `content_type`, `item_id`, `context`, `session_id`, `visitor_id`
+- `tool_page_view`: `tool`, `session_id`, `visitor_id`
+- `tool_run`: `tool_name`, input meta, options meta, `session_id`, `visitor_id`
+- `tool_success`: `tool_name`, output meta, `session_id`, `visitor_id`
+- `tool_error`: `tool_name`, `error_type`, `session_id`, `visitor_id`
+- `copy`: `tool_name`, `target`, meta, `session_id`, `visitor_id`
+- `paste`: `tool_name`, meta, `session_id`, `visitor_id`
+- `clear`: `tool_name`, `session_id`, `visitor_id`
+- `tts`: `action`, `tool_name`, `session_id`, `visitor_id`
+- `use_case_page_view`: `slug`, `session_id`, `visitor_id`
+- `click_try_next`: `from`, `to`, `session_id`, `visitor_id`
+- `click_tool_from_use_case`: `slug`, `tool`, `session_id`, `visitor_id`
+- `client_error`: `error_type`, `error_name`, `session_id`, `visitor_id`
+
+Input/output meta includes only safe counts: `char_count`, `word_count`, `line_count`, and their bucketed variants.
+
+### Where to view
+- GA4: Realtime and DebugView
+- Vercel Analytics: Analytics tab in Vercel dashboard

@@ -1,16 +1,66 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import TextArea from "./TextArea";
+import {
+  getTextMeta,
+  trackCopy,
+  trackInputChange,
+  trackPaste,
+  trackToolRun,
+  trackToolSuccess,
+} from "../lib/analytics";
 import { sanitizeText } from "../lib/text-safety";
 import { countTextStats } from "../lib/word-counter";
 
 const MAX_INPUT_CHARS = 100_000;
 
-export default function WordCounterTool() {
+type WordCounterToolProps = {
+  onUse?: () => void;
+};
+
+export default function WordCounterTool({ onUse }: WordCounterToolProps) {
   const [text, setText] = useState("");
   const stats = useMemo(() => countTextStats(text), [text]);
+  const hasTrackedRef = useRef(false);
+  const [copyLabel, setCopyLabel] = useState("Copy");
+  const copyTimeoutRef = useRef<number | null>(null);
+
+  const showCopyStatus = (label: string) => {
+    setCopyLabel(label);
+    if (copyTimeoutRef.current) {
+      window.clearTimeout(copyTimeoutRef.current);
+    }
+    copyTimeoutRef.current = window.setTimeout(() => {
+      setCopyLabel("Copy");
+    }, 1600);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyInput = async () => {
+    if (!text.trim()) {
+      showCopyStatus("Empty");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showCopyStatus("Copied");
+      trackCopy("word-counter", {
+        ...getTextMeta(text),
+        target: "input",
+      });
+    } catch (error) {
+      showCopyStatus("Failed");
+    }
+  };
 
   return (
     <>
@@ -45,10 +95,36 @@ export default function WordCounterTool() {
         <TextArea
           id="word-counter-text"
           label="Text input"
-          value={text}
-          onChange={(event) =>
-            setText(sanitizeText(event.target.value, MAX_INPUT_CHARS))
+          labelAction={
+            <button
+              type="button"
+              onClick={handleCopyInput}
+              className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-600 transition hover:border-zinc-300 hover:text-zinc-900"
+            >
+              {copyLabel}
+            </button>
           }
+          value={text}
+          onChange={(event) => {
+            const nextValue = sanitizeText(event.target.value, MAX_INPUT_CHARS);
+            setText(nextValue);
+            if (!hasTrackedRef.current && nextValue.trim()) {
+              hasTrackedRef.current = true;
+              const meta = getTextMeta(nextValue);
+              trackToolRun("word-counter", meta);
+              trackToolSuccess("word-counter", meta);
+              onUse?.();
+            }
+            if (nextValue.trim()) {
+              trackInputChange("word-counter", getTextMeta(nextValue));
+            }
+          }}
+          onPaste={(event) => {
+            const pasted = event.clipboardData.getData("text");
+            if (pasted) {
+              trackPaste("word-counter", getTextMeta(pasted));
+            }
+          }}
           placeholder="Start typing or paste your text here..."
           maxLength={MAX_INPUT_CHARS}
           helperText="Live updates as you type. Whitespace is ignored for the no-spaces count."

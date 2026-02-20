@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { USE_CASES, USE_CASE_CATEGORIES } from "../lib/use-cases";
 import { WORD_COUNTS } from "../lib/word-counts";
 
 const BASE_URL = "https://text-tool.live";
@@ -55,6 +56,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    {
+      url: `${BASE_URL}/about`,
+      lastModified,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/use-cases`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
   ];
 
   const wordCountRoutes: MetadataRoute.Sitemap = WORD_COUNTS.map((count) => ({
@@ -64,5 +77,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...wordCountRoutes];
+  const useCaseCategoryRoutes: MetadataRoute.Sitemap = USE_CASE_CATEGORIES.map(
+    (category) => ({
+      url: `${BASE_URL}/use-cases/${category.slug}`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }),
+  );
+
+  const useCaseRoutes: MetadataRoute.Sitemap = USE_CASES.map((useCase) => ({
+    url: `${BASE_URL}/use-cases/${useCase.slug}`,
+    lastModified,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...wordCountRoutes,
+    ...useCaseCategoryRoutes,
+    ...useCaseRoutes,
+  ];
 }
