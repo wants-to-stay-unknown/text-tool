@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
@@ -94,7 +95,9 @@ gtag('config', '${gaId}', { send_page_view: false });`}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AnalyticsProvider />
+        <Suspense fallback={null}>
+          <AnalyticsProvider />
+        </Suspense>
         <Navbar />
         {children}
         <Footer />
