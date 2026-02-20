@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { USE_CASES, USE_CASE_CATEGORIES } from "../lib/use-cases";
+import { TOOLS } from "../lib/tools";
 import { WORD_COUNTS } from "../lib/word-counts";
 
 const BASE_URL = "https://text-tool.live";
@@ -13,30 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "weekly",
       priority: 1,
-    },
-    {
-      url: `${BASE_URL}/word-counter`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/case-converter`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/remove-duplicates`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/text-to-speech`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.9,
     },
     {
       url: `${BASE_URL}/privacy-policy`,
@@ -70,6 +47,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  const toolRoutes: MetadataRoute.Sitemap = TOOLS.map((tool) => ({
+    url: `${BASE_URL}${tool.route}`,
+    lastModified,
+    changeFrequency: "weekly",
+    priority: 0.9,
+  }));
+
   const wordCountRoutes: MetadataRoute.Sitemap = WORD_COUNTS.map((count) => ({
     url: `${BASE_URL}/${count}-words`,
     lastModified,
@@ -95,6 +79,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...staticRoutes,
+    ...toolRoutes,
     ...wordCountRoutes,
     ...useCaseCategoryRoutes,
     ...useCaseRoutes,

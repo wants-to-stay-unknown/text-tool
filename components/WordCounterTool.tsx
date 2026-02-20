@@ -64,7 +64,7 @@ export default function WordCounterTool({ onUse }: WordCounterToolProps) {
 
   return (
     <>
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-35px_rgba(15,23,42,0.45)]">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Word count
@@ -87,6 +87,38 @@ export default function WordCounterTool({ onUse }: WordCounterToolProps) {
           </p>
           <p className="mt-3 text-3xl font-semibold text-zinc-900">
             {stats.charactersNoSpaces}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-35px_rgba(15,23,42,0.45)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Sentences
+          </p>
+          <p className="mt-3 text-3xl font-semibold text-zinc-900">
+            {stats.sentences}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-35px_rgba(15,23,42,0.45)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Paragraphs
+          </p>
+          <p className="mt-3 text-3xl font-semibold text-zinc-900">
+            {stats.paragraphs}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-35px_rgba(15,23,42,0.45)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Reading time (min)
+          </p>
+          <p className="mt-3 text-3xl font-semibold text-zinc-900">
+            {stats.readingTimeMinutes}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-35px_rgba(15,23,42,0.45)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Speaking time (min)
+          </p>
+          <p className="mt-3 text-3xl font-semibold text-zinc-900">
+            {stats.speakingTimeMinutes}
           </p>
         </div>
       </section>

@@ -29,5 +29,11 @@ export const metadata: Metadata = {
 };
 
 export default function CaseConverterUseCasesPage() {
-  return <UseCaseCategoryPage categorySlug="case-converter" />;
+  return (
+    <UseCaseCategoryPage
+      toolRoute="/case-converter"
+      title="Case Converter Use Cases"
+      description="Fix capitalization and formatting quickly."
+    />
+  );
 }

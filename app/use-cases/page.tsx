@@ -17,7 +17,7 @@ export default function UseCasesIndexPage() {
   return (
     <ToolLayout
       title="Use cases"
-      description="Find a practical use case, then jump into the right tool to get it done."
+      description="Find a practical use case, then jump into the right tool for word limits, case formatting, or cleanup."
       maxWidthClassName="max-w-6xl"
     >
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -84,7 +84,7 @@ export default function UseCasesIndexPage() {
 export const metadata: Metadata = {
   title: "Use Cases",
   description:
-    "Browse practical use cases for word counting, case conversion, duplicate removal, and text to speech.",
+    "Browse practical use cases for word limits, case formatting, cleanup, and text to speech.",
   alternates: {
     canonical: "https://text-tool.live/use-cases",
   },
@@ -92,7 +92,7 @@ export const metadata: Metadata = {
     url: "https://text-tool.live/use-cases",
     title: "Use Cases",
     description:
-      "Browse practical use cases for word counting, case conversion, duplicate removal, and text to speech.",
+      "Browse practical use cases for word limits, case formatting, cleanup, and text to speech.",
     images: [
       {
         url: "https://text-tool.live/og.svg",
@@ -105,7 +105,7 @@ export const metadata: Metadata = {
   twitter: {
     title: "Use Cases",
     description:
-      "Browse practical use cases for word counting, case conversion, duplicate removal, and text to speech.",
+      "Browse practical use cases for word limits, case formatting, cleanup, and text to speech.",
     images: ["https://text-tool.live/og.svg"],
   },
 };

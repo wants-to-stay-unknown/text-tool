@@ -8,10 +8,12 @@ import {
   useState,
 } from "react";
 
+import Link from "next/link";
+
+import AnalyticsEvent from "../../components/AnalyticsEvent";
 import Button from "../../components/Button";
 import TextArea from "../../components/TextArea";
 import ToolLayout from "../../components/ToolLayout";
-import AnalyticsEvent from "../../components/AnalyticsEvent";
 import TrackedLink from "../../components/TrackedLink";
 import {
   getTextMeta,
@@ -22,14 +24,12 @@ import {
   trackToolRun,
   trackToolSuccess,
 } from "../../lib/analytics";
-import { sanitizeText } from "../../lib/text-safety";
 import {
-  applyCaseMode,
-  MODE_HELP,
-  MODE_LABEL,
-  type CaseMode,
-} from "../../lib/case-converter";
-import Link from "next/link";
+  CASE_STYLE_LABEL,
+  type CaseStyle,
+  convertCaseStyle,
+} from "../../lib/case-style-converter";
+import { sanitizeText } from "../../lib/text-safety";
 import { getUseCasesByToolRoute, USE_CASE_BY_SLUG } from "../../lib/use-cases";
 import {
   POST_ACTION_SUGGESTIONS,
@@ -40,37 +40,38 @@ import {
 } from "../../lib/tools";
 
 const MAX_INPUT_CHARS = 100_000;
-const TOOL_URL = "https://text-tool.live/case-converter";
+const TOOL_URL = "https://text-tool.live/case-style-converter";
 
 const TOOL_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Case Converter",
+  name: "Case Style Converter",
   url: TOOL_URL,
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Web",
   description:
-    "Convert text case, fix capitalization, and trim extra spaces instantly in your browser.",
+    "Convert identifiers to camelCase, snake_case, or kebab-case instantly.",
 };
 
 const FAQ_ITEMS = [
   {
-    question: "What is the difference between title case and sentence case?",
+    question: "Does it handle existing separators?",
     answer:
-      "Title case capitalizes each word, while sentence case capitalizes only the first word of each sentence.",
+      "Yes. Underscores, dashes, and spaces are normalized into the target style.",
   },
   {
-    question: "Does the converter keep line breaks?",
-    answer: "Yes. The converter keeps line breaks and formatting intact.",
-  },
-  {
-    question: "Can I convert large blocks of text?",
+    question: "Will it preserve numbers?",
     answer:
-      "Yes. The tool supports long text and updates the output instantly.",
+      "Yes, numbers are kept in place while words are re-cased.",
   },
   {
-    question: "Is this tool free to use?",
-    answer: "Yes. It runs in your browser and does not require sign-up.",
+    question: "Can I convert multiple lines at once?",
+    answer:
+      "Yes, paste multi-line lists and each line converts independently.",
+  },
+  {
+    question: "Is the conversion done locally?",
+    answer: "Yes. The conversion runs entirely in your browser.",
   },
 ];
 
@@ -87,26 +88,20 @@ const FAQ_JSON_LD = {
   })),
 };
 
-
-export default function CaseConverterPage() {
+export default function CaseStyleConverterPage() {
   const [text, setText] = useState("");
-  const [mode, setMode] = useState<CaseMode>("lowercase");
-  const [toast, setToast] = useState("");
+  const [mode, setMode] = useState<CaseStyle>("camel");
   const [hasUsed, setHasUsed] = useState(false);
   const [inputCopyLabel, setInputCopyLabel] = useState("Copy");
   const [outputCopyLabel, setOutputCopyLabel] = useState("Copy");
-  const toastTimeoutRef = useRef<number | null>(null);
   const inputCopyTimeoutRef = useRef<number | null>(null);
   const outputCopyTimeoutRef = useRef<number | null>(null);
   const hasTrackedRef = useRef(false);
 
-  const output = useMemo(() => applyCaseMode(text, mode), [text, mode]);
+  const output = useMemo(() => convertCaseStyle(text, mode), [text, mode]);
 
   useEffect(() => {
     return () => {
-      if (toastTimeoutRef.current) {
-        window.clearTimeout(toastTimeoutRef.current);
-      }
       if (inputCopyTimeoutRef.current) {
         window.clearTimeout(inputCopyTimeoutRef.current);
       }
@@ -115,16 +110,6 @@ export default function CaseConverterPage() {
       }
     };
   }, []);
-
-  const showToast = (message: string) => {
-    setToast(message);
-    if (toastTimeoutRef.current) {
-      window.clearTimeout(toastTimeoutRef.current);
-    }
-    toastTimeoutRef.current = window.setTimeout(() => {
-      setToast("");
-    }, 2400);
-  };
 
   const showCopyStatus = (
     label: string,
@@ -140,14 +125,7 @@ export default function CaseConverterPage() {
     }, 1600);
   };
 
-  const trackUse = () => {
-    if (!hasTrackedRef.current) {
-      hasTrackedRef.current = true;
-      setHasUsed(true);
-    }
-  };
-
-  const handleCopy = async () => {
+  const handleCopyOutput = async () => {
     if (!output) {
       showCopyStatus("Empty", setOutputCopyLabel, outputCopyTimeoutRef);
       return;
@@ -156,7 +134,7 @@ export default function CaseConverterPage() {
     try {
       await navigator.clipboard.writeText(output);
       showCopyStatus("Copied", setOutputCopyLabel, outputCopyTimeoutRef);
-      trackCopy("case-converter", {
+      trackCopy("case-style-converter", {
         ...getTextMeta(output),
         target: "output",
         mode,
@@ -175,7 +153,7 @@ export default function CaseConverterPage() {
     try {
       await navigator.clipboard.writeText(text);
       showCopyStatus("Copied", setInputCopyLabel, inputCopyTimeoutRef);
-      trackCopy("case-converter", {
+      trackCopy("case-style-converter", {
         ...getTextMeta(text),
         target: "input",
         mode,
@@ -187,29 +165,32 @@ export default function CaseConverterPage() {
 
   const handleClear = () => {
     setText("");
-    showToast("Cleared input.");
-    trackClear("case-converter");
+    trackClear("case-style-converter");
   };
 
-  const tryNextRoutes = TRY_NEXT_BY_TOOL["/case-converter"];
-  const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/case-converter"];
-  const popularUseCases = getUseCasesByToolRoute("/case-converter").slice(0, 6);
-  const tips = TOOL_TIPS["/case-converter"];
-  const postAction = POST_ACTION_SUGGESTIONS["/case-converter"];
+  const tryNextRoutes = TRY_NEXT_BY_TOOL["/case-style-converter"];
+  const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/case-style-converter"];
+  const popularUseCases = getUseCasesByToolRoute("/case-style-converter").slice(
+    0,
+    6,
+  );
+  const tips = TOOL_TIPS["/case-style-converter"];
+  const postAction = POST_ACTION_SUGGESTIONS["/case-style-converter"];
   const postActionUseCase = USE_CASE_BY_SLUG[postAction.useCaseSlug];
 
   return (
     <ToolLayout
-      title="Case Converter"
-      description="Convert text case instantly. Choose a mode and your output updates live as you type."
+      title="Case Style Converter"
+      description="Convert identifiers to camelCase, snake_case, or kebab-case with code-friendly output."
     >
-      <AnalyticsEvent event="tool_page_view" props={{ tool: "case-converter" }} />
+      <AnalyticsEvent event="tool_page_view" props={{ tool: "case-style-converter" }} />
       <script type="application/ld+json">{JSON.stringify(TOOL_JSON_LD)}</script>
       <script type="application/ld+json">{JSON.stringify(FAQ_JSON_LD)}</script>
+
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)]">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
           <TextArea
-            id="case-converter-input"
+            id="case-style-input"
             label="Input"
             labelAction={
               <button
@@ -228,8 +209,18 @@ export default function CaseConverterPage() {
               );
               setText(nextValue);
               if (nextValue.trim()) {
-                trackUse();
-                trackInputChange("case-converter", {
+                if (!hasTrackedRef.current) {
+                  hasTrackedRef.current = true;
+                  setHasUsed(true);
+                  trackToolRun("case-style-converter", getTextMeta(nextValue), {
+                    mode,
+                  });
+                  trackToolSuccess("case-style-converter", {
+                    ...getTextMeta(nextValue),
+                    mode,
+                  });
+                }
+                trackInputChange("case-style-converter", {
                   ...getTextMeta(nextValue),
                   mode,
                 });
@@ -238,33 +229,33 @@ export default function CaseConverterPage() {
             onPaste={(event) => {
               const pasted = event.clipboardData.getData("text");
               if (pasted) {
-                trackPaste("case-converter", {
+                trackPaste("case-style-converter", {
                   ...getTextMeta(pasted),
                   mode,
                 });
               }
             }}
-            placeholder="Paste or type your text here..."
+            placeholder="Paste your identifiers or headings here..."
             maxLength={MAX_INPUT_CHARS}
             helperText="Line breaks are preserved across conversions."
           />
         </div>
 
-        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)]">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
           <TextArea
-            id="case-converter-output"
+            id="case-style-output"
             label="Output"
             labelAction={
               <>
                 <span className="text-xs text-zinc-500">
                   Active:{" "}
                   <span className="font-semibold text-zinc-700">
-                    {MODE_LABEL[mode]}
+                    {CASE_STYLE_LABEL[mode]}
                   </span>
                 </span>
                 <button
                   type="button"
-                  onClick={handleCopy}
+                  onClick={handleCopyOutput}
                   className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-600 transition hover:border-zinc-300 hover:text-zinc-900"
                 >
                   {outputCopyLabel}
@@ -273,56 +264,37 @@ export default function CaseConverterPage() {
             }
             value={output}
             readOnly
-            placeholder="Your converted text will appear here."
+            placeholder="Converted identifiers appear here."
             maxLength={MAX_INPUT_CHARS}
             helperText="Output updates instantly as you type."
           />
         </div>
       </section>
 
-      <section className="flex flex-col gap-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)]">
+      <section className="flex flex-col gap-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <div className="flex flex-wrap gap-3">
-          {(Object.keys(MODE_LABEL) as CaseMode[]).map((option) => (
+          {(Object.keys(CASE_STYLE_LABEL) as CaseStyle[]).map((option) => (
             <Button
               key={option}
-              onClick={() => {
-                setMode(option);
-                if (text.trim()) {
-                  trackUse();
-                  const inputMeta = getTextMeta(text);
-                  const outputMeta = getTextMeta(applyCaseMode(text, option));
-                  trackToolRun("case-converter", inputMeta, { mode: option });
-                  trackToolSuccess("case-converter", {
-                    ...outputMeta,
-                    mode: option,
-                  });
-                }
-              }}
+              onClick={() => setMode(option)}
               variant={mode === option ? "primary" : "secondary"}
             >
-              {MODE_LABEL[option]}
+              {CASE_STYLE_LABEL[option]}
             </Button>
           ))}
           <Button onClick={handleClear} variant="secondary">
             Clear
           </Button>
-          <Button onClick={handleCopy} variant="primary">
+          <Button onClick={handleCopyOutput} variant="primary">
             Copy Output
           </Button>
         </div>
 
         <div className="grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
-          {(Object.keys(MODE_HELP) as CaseMode[]).map((option) => (
-            <div key={option} className="flex items-start gap-2">
-              <span className="mt-0.5 inline-flex h-2 w-2 rounded-full bg-zinc-300" />
-              <span>
-                <span className="font-semibold text-zinc-900">
-                  {MODE_LABEL[option]}:
-                </span>{" "}
-                {MODE_HELP[option]}
-              </span>
-            </div>
-          ))}
+          <p>Use camelCase for JavaScript and TypeScript variables.</p>
+          <p>snake_case works well for database columns and CSV headers.</p>
+          <p>kebab-case is common for URLs, slugs, and CSS classes.</p>
+          <p>Paste multi-line lists to convert identifiers in bulk.</p>
         </div>
       </section>
 
@@ -337,7 +309,7 @@ export default function CaseConverterPage() {
               key={route}
               href={route}
               eventName="click_try_next"
-              eventProps={{ from: "case-converter", to: route }}
+              eventProps={{ from: "case-style-converter", to: route }}
               className="underline"
             >
               {TOOL_BY_ROUTE[route]?.name}
@@ -351,7 +323,7 @@ export default function CaseConverterPage() {
           Popular use cases for this tool
         </h2>
         <p className="mt-2 text-sm text-zinc-600">
-          Use case guides to fix case fast.
+          Standardize identifiers quickly across your stack.
         </p>
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
           <Link className="underline" href="/use-cases/case-format">
@@ -381,7 +353,10 @@ export default function CaseConverterPage() {
                 {tip.title}
               </summary>
               <p className="mt-2 text-sm text-zinc-600">{tip.text}</p>
-              <Link className="mt-2 inline-flex text-sm font-semibold text-zinc-900 underline" href={tip.linkHref}>
+              <Link
+                className="mt-2 inline-flex text-sm font-semibold text-zinc-900 underline"
+                href={tip.linkHref}
+              >
                 {tip.linkLabel}
               </Link>
             </details>
@@ -391,9 +366,7 @@ export default function CaseConverterPage() {
 
       {hasUsed ? (
         <section className="rounded-3xl border border-zinc-200/80 bg-white p-5 text-sm text-zinc-600 shadow-sm">
-          <p className="font-semibold text-zinc-900">
-            Next, you might want to...
-          </p>
+          <p className="font-semibold text-zinc-900">Next, you might want to...</p>
           <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold text-zinc-600">
             {postAction.tools.map((route) => (
               <Link key={route} className="underline" href={route}>
@@ -434,12 +407,6 @@ export default function CaseConverterPage() {
           </Link>
         ))}
       </section>
-
-      {toast ? (
-        <div className="fixed bottom-6 right-6 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 shadow-lg">
-          {toast}
-        </div>
-      ) : null}
     </ToolLayout>
   );
 }

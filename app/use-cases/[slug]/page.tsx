@@ -6,7 +6,6 @@ import AnalyticsEvent from "../../../components/AnalyticsEvent";
 import TrackedLink from "../../../components/TrackedLink";
 import ToolLayout from "../../../components/ToolLayout";
 import {
-  USE_CASES,
   USE_CASE_BY_SLUG,
   getAlternateToolRoute,
 } from "../../../lib/use-cases";
@@ -18,11 +17,11 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 export const revalidate = 86400;
 
 export function generateStaticParams() {
-  return USE_CASES.map((useCase) => ({ slug: useCase.slug }));
+  return Object.keys(USE_CASE_BY_SLUG).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -147,6 +146,13 @@ export default async function UseCasePage({ params }: PageProps) {
             <p key={paragraph}>{paragraph}</p>
           ))}
         </div>
+        <p className="mt-4 font-semibold text-zinc-900">
+          {useCase.crossLink.text}{" "}
+          <Link className="underline" href={useCase.crossLink.href}>
+            {useCase.crossLink.label}
+          </Link>
+          .
+        </p>
       </section>
 
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-sm">

@@ -10,6 +10,9 @@ describe("countTextStats", () => {
       charactersNoSpaces: 0,
       lines: 0,
       sentences: 0,
+      paragraphs: 0,
+      readingTimeMinutes: 0,
+      speakingTimeMinutes: 0,
     });
   });
 
@@ -36,6 +39,7 @@ describe("countTextStats", () => {
   it("counts sentences with punctuation", () => {
     const stats = countTextStats("Hello world. How are you? I'm fine!");
     expect(stats.sentences).toBe(3);
+    expect(stats.paragraphs).toBe(1);
   });
 
   it("handles Windows newlines", () => {

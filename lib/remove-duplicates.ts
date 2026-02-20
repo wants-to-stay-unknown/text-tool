@@ -3,6 +3,8 @@ export type RemoveOptions = {
   trimWhitespace: boolean;
   keepFirst: boolean;
   removeEmpty: boolean;
+  removeExtraSpaces: boolean;
+  sortLines: boolean;
 };
 
 export type RemoveResult = {
@@ -17,6 +19,8 @@ export const DEFAULT_OPTIONS: RemoveOptions = {
   trimWhitespace: true,
   keepFirst: true,
   removeEmpty: false,
+  removeExtraSpaces: false,
+  sortLines: false,
 };
 
 export function detectLineBreak(value: string) {
@@ -26,6 +30,10 @@ export function detectLineBreak(value: string) {
 export function getComparisonKey(line: string, options: RemoveOptions) {
   const base = options.trimWhitespace ? line.trim() : line;
   return options.caseSensitive ? base : base.toLowerCase();
+}
+
+export function normalizeLineSpacing(value: string) {
+  return value.replace(/[ \t]+/g, " ").trim();
 }
 
 export function removeDuplicates(
@@ -42,7 +50,10 @@ export function removeDuplicates(
   }
 
   const lineBreak = detectLineBreak(value);
-  const lines = value.split(/\r\n|\n/);
+  const rawLines = value.split(/\r\n|\n/);
+  const lines = options.removeExtraSpaces
+    ? rawLines.map((line) => normalizeLineSpacing(line))
+    : rawLines;
   const seen = new Set<string>();
 
   const source = options.keepFirst ? lines : [...lines].reverse();
@@ -68,7 +79,12 @@ export function removeDuplicates(
     uniqueLines.reverse();
   }
 
-  const output = uniqueLines.join(lineBreak);
+  const sortedLines = options.sortLines
+    ? [...uniqueLines].sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
+      )
+    : uniqueLines;
+  const output = sortedLines.join(lineBreak);
   const totalLines = lines.length;
   const uniqueCount = uniqueLines.length;
   const removedDuplicates = Math.max(0, totalLines - uniqueCount);

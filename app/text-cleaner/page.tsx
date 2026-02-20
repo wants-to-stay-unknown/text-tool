@@ -8,10 +8,12 @@ import {
   useState,
 } from "react";
 
+import Link from "next/link";
+
+import AnalyticsEvent from "../../components/AnalyticsEvent";
 import Button from "../../components/Button";
 import TextArea from "../../components/TextArea";
 import ToolLayout from "../../components/ToolLayout";
-import AnalyticsEvent from "../../components/AnalyticsEvent";
 import TrackedLink from "../../components/TrackedLink";
 import {
   getTextMeta,
@@ -22,13 +24,12 @@ import {
   trackToolRun,
   trackToolSuccess,
 } from "../../lib/analytics";
-import { sanitizeText } from "../../lib/text-safety";
 import {
-  DEFAULT_OPTIONS,
-  removeDuplicates,
-  type RemoveOptions,
-} from "../../lib/remove-duplicates";
-import Link from "next/link";
+  cleanText,
+  DEFAULT_TEXT_CLEANER_OPTIONS,
+  type TextCleanerOptions,
+} from "../../lib/text-cleaner";
+import { sanitizeText } from "../../lib/text-safety";
 import { getUseCasesByToolRoute, USE_CASE_BY_SLUG } from "../../lib/use-cases";
 import {
   POST_ACTION_SUGGESTIONS,
@@ -39,39 +40,39 @@ import {
 } from "../../lib/tools";
 
 const MAX_INPUT_CHARS = 100_000;
-const TOOL_URL = "https://text-tool.live/remove-duplicates";
+const TOOL_URL = "https://text-tool.live/text-cleaner";
 
 const TOOL_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Remove Duplicate Lines",
+  name: "Text Cleaner",
   url: TOOL_URL,
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Web",
   description:
-    "Remove duplicate lines with options for trimming, empty lines, extra spaces, and sorting.",
+    "Clean text with toggles for duplicates, empty lines, extra spaces, and sorting.",
 };
 
 const FAQ_ITEMS = [
   {
-    question: "Does it keep the original order of lines?",
+    question: "Does the cleaner keep line breaks?",
     answer:
-      "Yes. When keep first is enabled, the original order is preserved.",
+      "Yes. Line breaks are preserved unless you remove empty lines or sort output.",
   },
   {
-    question: "Can I remove duplicates ignoring case?",
+    question: "What does unique list mode do?",
     answer:
-      "Yes. Disable case sensitivity to compare lines without case differences.",
+      "Unique list mode removes duplicates and sorts the list A–Z in one step.",
   },
   {
-    question: "What happens when trimming is enabled?",
+    question: "Is the output updated automatically?",
     answer:
-      "Lines are compared after trimming whitespace, while the original line is kept in the output.",
+      "Yes, the output refreshes when you change the text or toggle options.",
   },
   {
-    question: "Will this remove empty lines?",
+    question: "Is my data stored anywhere?",
     answer:
-      "Yes. Enable the remove empty lines option to drop blank rows.",
+      "No. All processing happens in your browser and nothing is saved.",
   },
 ];
 
@@ -88,44 +89,30 @@ const FAQ_JSON_LD = {
   })),
 };
 
-
-export default function RemoveDuplicatesPage() {
+export default function TextCleanerPage() {
   const [text, setText] = useState("");
-  const [options, setOptions] = useState<RemoveOptions>(DEFAULT_OPTIONS);
-  const [status, setStatus] = useState("");
+  const [options, setOptions] = useState<TextCleanerOptions>(
+    DEFAULT_TEXT_CLEANER_OPTIONS,
+  );
   const [hasUsed, setHasUsed] = useState(false);
-  const [inputCopyLabel, setInputCopyLabel] = useState("Copy");
-  const [outputCopyLabel, setOutputCopyLabel] = useState("Copy");
-  const statusTimeoutRef = useRef<number | null>(null);
-  const inputCopyTimeoutRef = useRef<number | null>(null);
+  const [outputCopyLabel, setOutputCopyLabel] = useState("Copy output");
+  const [inputCopyLabel, setInputCopyLabel] = useState("Copy input");
   const outputCopyTimeoutRef = useRef<number | null>(null);
+  const inputCopyTimeoutRef = useRef<number | null>(null);
   const hasTrackedRef = useRef(false);
 
-  const result = useMemo(() => removeDuplicates(text, options), [text, options]);
+  const result = useMemo(() => cleanText(text, options), [text, options]);
 
   useEffect(() => {
     return () => {
-      if (statusTimeoutRef.current) {
-        window.clearTimeout(statusTimeoutRef.current);
+      if (outputCopyTimeoutRef.current) {
+        window.clearTimeout(outputCopyTimeoutRef.current);
       }
       if (inputCopyTimeoutRef.current) {
         window.clearTimeout(inputCopyTimeoutRef.current);
       }
-      if (outputCopyTimeoutRef.current) {
-        window.clearTimeout(outputCopyTimeoutRef.current);
-      }
     };
   }, []);
-
-  const showStatus = (message: string) => {
-    setStatus(message);
-    if (statusTimeoutRef.current) {
-      window.clearTimeout(statusTimeoutRef.current);
-    }
-    statusTimeoutRef.current = window.setTimeout(() => {
-      setStatus("");
-    }, 2400);
-  };
 
   const showCopyStatus = (
     label: string,
@@ -137,175 +124,111 @@ export default function RemoveDuplicatesPage() {
       window.clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = window.setTimeout(() => {
-      setLabel("Copy");
+      setLabel(label.includes("output") ? "Copy output" : "Copy input");
     }, 1600);
   };
 
-  const trackUse = () => {
-    if (hasTrackedRef.current) {
+  const handleCopy = async (value: string, target: "input" | "output") => {
+    if (!value.trim()) {
+      showCopyStatus(
+        target === "input" ? "Empty input" : "Empty output",
+        target === "input" ? setInputCopyLabel : setOutputCopyLabel,
+        target === "input" ? inputCopyTimeoutRef : outputCopyTimeoutRef,
+      );
       return;
     }
-    hasTrackedRef.current = true;
-    setHasUsed(true);
+
+    try {
+      await navigator.clipboard.writeText(value);
+      showCopyStatus(
+        target === "input" ? "Copied input" : "Copied output",
+        target === "input" ? setInputCopyLabel : setOutputCopyLabel,
+        target === "input" ? inputCopyTimeoutRef : outputCopyTimeoutRef,
+      );
+      trackCopy("text-cleaner", {
+        ...getTextMeta(value),
+        target,
+      });
+    } catch (error) {
+      showCopyStatus(
+        target === "input" ? "Failed input" : "Failed output",
+        target === "input" ? setInputCopyLabel : setOutputCopyLabel,
+        target === "input" ? inputCopyTimeoutRef : outputCopyTimeoutRef,
+      );
+    }
   };
 
-  const updateOption = (key: keyof RemoveOptions) => {
+  const updateOption = (key: keyof TextCleanerOptions) => {
     setOptions((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const applyUniqueListPreset = () => {
     setOptions({
-      caseSensitive: false,
-      trimWhitespace: true,
-      keepFirst: true,
-      removeEmpty: true,
+      removeDuplicateLines: true,
+      removeEmptyLines: true,
       removeExtraSpaces: true,
       sortLines: true,
+      uniqueList: true,
     });
-    showStatus("Unique list preset applied.");
   };
 
   const handleClear = () => {
     setText("");
-    showStatus("Cleared input.");
-    trackClear("remove-duplicates");
+    trackClear("text-cleaner");
   };
 
-  const handleCopyInput = async () => {
-    if (!text.trim()) {
-      showCopyStatus("Empty", setInputCopyLabel, inputCopyTimeoutRef);
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(text);
-      showCopyStatus("Copied", setInputCopyLabel, inputCopyTimeoutRef);
-      trackCopy("remove-duplicates", {
-        ...getTextMeta(text),
-        target: "input",
-      });
-    } catch (error) {
-      showCopyStatus("Failed", setInputCopyLabel, inputCopyTimeoutRef);
-    }
-  };
-
-  const handleCopy = async () => {
-    if (!result.output) {
-      showStatus("Nothing to copy yet.");
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(result.output);
-      showCopyStatus("Copied", setOutputCopyLabel, outputCopyTimeoutRef);
-      trackUse();
-      trackCopy("remove-duplicates", {
-        output_lines: result.uniqueLines,
-        removed_count: result.removedDuplicates,
-        target: "output",
-      });
-    } catch (error) {
-      showCopyStatus("Failed", setOutputCopyLabel, outputCopyTimeoutRef);
-    }
-  };
-
-  const handleDownload = () => {
-    if (!result.output) {
-      showStatus("Nothing to download yet.");
-      return;
-    }
-
-    const blob = new Blob([result.output], { type: "text/plain;charset=utf-8" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "unique-lines.txt";
-    link.click();
-    window.URL.revokeObjectURL(url);
-    showStatus("Downloaded output.");
-    trackUse();
-    trackToolSuccess("remove-duplicates", {
-      output_lines: result.uniqueLines,
-      removed_count: result.removedDuplicates,
-      action: "download",
-    });
-  };
-
-  const handleProcess = () => {
-    showStatus("Processed.");
-    trackUse();
-    trackToolRun(
-      "remove-duplicates",
-      {
-        ...getTextMeta(text),
-        input_lines: result.totalLines,
-      },
-      {
-        case_sensitive: options.caseSensitive,
-        trim_whitespace: options.trimWhitespace,
-        keep_first: options.keepFirst,
-        remove_empty: options.removeEmpty,
-        remove_extra_spaces: options.removeExtraSpaces,
-        sort_lines: options.sortLines,
-      },
-    );
-    trackToolSuccess("remove-duplicates", {
-      output_lines: result.uniqueLines,
-      removed_count: result.removedDuplicates,
-    });
-  };
-
-  const tryNextRoutes = TRY_NEXT_BY_TOOL["/remove-duplicates"];
-  const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/remove-duplicates"];
-  const popularUseCases = getUseCasesByToolRoute("/remove-duplicates").slice(0, 6);
-  const tips = TOOL_TIPS["/remove-duplicates"];
-  const postAction = POST_ACTION_SUGGESTIONS["/remove-duplicates"];
+  const tryNextRoutes = TRY_NEXT_BY_TOOL["/text-cleaner"];
+  const relatedToolRoutes = RELATED_TOOLS_BY_TOOL["/text-cleaner"];
+  const popularUseCases = getUseCasesByToolRoute("/text-cleaner").slice(0, 6);
+  const tips = TOOL_TIPS["/text-cleaner"];
+  const postAction = POST_ACTION_SUGGESTIONS["/text-cleaner"];
   const postActionUseCase = USE_CASE_BY_SLUG[postAction.useCaseSlug];
 
   return (
     <ToolLayout
-      title="Remove Duplicate Lines"
-      description="Remove repeated lines while preserving the line break style in your text. Adjust the options to control how duplicates are detected."
+      title="Text Cleaner"
+      description="Clean text with one set of toggles for duplicates, blanks, spaces, and sorting."
     >
-      <AnalyticsEvent event="tool_page_view" props={{ tool: "remove-duplicates" }} />
+      <AnalyticsEvent event="tool_page_view" props={{ tool: "text-cleaner" }} />
       <script type="application/ld+json">{JSON.stringify(TOOL_JSON_LD)}</script>
       <script type="application/ld+json">{JSON.stringify(FAQ_JSON_LD)}</script>
-      <section className="grid gap-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)] sm:grid-cols-3">
-        <div>
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)]">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Total lines
           </p>
-          <p className="mt-2 text-3xl font-semibold text-zinc-900">
+          <p className="mt-3 text-3xl font-semibold text-zinc-900">
             {result.totalLines}
           </p>
         </div>
-        <div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)]">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Unique lines
+            Output lines
           </p>
-          <p className="mt-2 text-3xl font-semibold text-zinc-900">
-            {result.uniqueLines}
+          <p className="mt-3 text-3xl font-semibold text-zinc-900">
+            {result.outputLines}
           </p>
         </div>
-        <div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.35)]">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Removed duplicates
+            Duplicates removed
           </p>
-          <p className="mt-2 text-3xl font-semibold text-zinc-900">
+          <p className="mt-3 text-3xl font-semibold text-zinc-900">
             {result.removedDuplicates}
           </p>
         </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)]">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
           <TextArea
-            id="remove-duplicates-input"
+            id="text-cleaner-input"
             label="Input"
             labelAction={
               <button
                 type="button"
-                onClick={handleCopyInput}
+                onClick={() => handleCopy(text, "input")}
                 className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-600 transition hover:border-zinc-300 hover:text-zinc-900"
               >
                 {inputCopyLabel}
@@ -319,76 +242,64 @@ export default function RemoveDuplicatesPage() {
               );
               setText(nextValue);
               if (nextValue.trim()) {
-                trackInputChange("remove-duplicates", getTextMeta(nextValue));
+                if (!hasTrackedRef.current) {
+                  hasTrackedRef.current = true;
+                  setHasUsed(true);
+                  trackToolRun("text-cleaner", getTextMeta(nextValue));
+                  trackToolSuccess("text-cleaner", getTextMeta(nextValue));
+                }
+                trackInputChange("text-cleaner", getTextMeta(nextValue));
               }
             }}
             onPaste={(event) => {
               const pasted = event.clipboardData.getData("text");
               if (pasted) {
-                trackPaste("remove-duplicates", getTextMeta(pasted));
+                trackPaste("text-cleaner", getTextMeta(pasted));
               }
             }}
-            placeholder="Paste or type your lines here..."
+            placeholder="Paste your text here..."
             maxLength={MAX_INPUT_CHARS}
+            helperText="Cleaning updates automatically when text or toggles change."
           />
         </div>
 
-        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)]">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
           <TextArea
-            id="remove-duplicates-output"
+            id="text-cleaner-output"
             label="Output"
             labelAction={
               <button
                 type="button"
-                onClick={handleCopy}
+                onClick={() => handleCopy(result.output, "output")}
                 className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-600 transition hover:border-zinc-300 hover:text-zinc-900"
               >
                 {outputCopyLabel}
               </button>
             }
-            readOnly
             value={result.output}
-            placeholder="Your unique lines will appear here."
+            readOnly
+            placeholder="Your cleaned text appears here."
             maxLength={MAX_INPUT_CHARS}
-            helperText="Output refreshes automatically when text or options change."
           />
         </div>
       </section>
 
-      <section className="flex flex-col gap-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.45)]">
+      <section className="flex flex-col gap-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <label className="flex items-center gap-3 text-sm font-semibold text-zinc-700">
             <input
               type="checkbox"
-              checked={options.caseSensitive}
-              onChange={() => updateOption("caseSensitive")}
+              checked={options.removeDuplicateLines}
+              onChange={() => updateOption("removeDuplicateLines")}
               className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400"
             />
-            Case sensitive
+            Remove duplicate lines
           </label>
           <label className="flex items-center gap-3 text-sm font-semibold text-zinc-700">
             <input
               type="checkbox"
-              checked={options.trimWhitespace}
-              onChange={() => updateOption("trimWhitespace")}
-              className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400"
-            />
-            Trim whitespace before comparing
-          </label>
-          <label className="flex items-center gap-3 text-sm font-semibold text-zinc-700">
-            <input
-              type="checkbox"
-              checked={options.keepFirst}
-              onChange={() => updateOption("keepFirst")}
-              className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400"
-            />
-            Keep first occurrence order
-          </label>
-          <label className="flex items-center gap-3 text-sm font-semibold text-zinc-700">
-            <input
-              type="checkbox"
-              checked={options.removeEmpty}
-              onChange={() => updateOption("removeEmpty")}
+              checked={options.removeEmptyLines}
+              onChange={() => updateOption("removeEmptyLines")}
               className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400"
             />
             Remove empty lines
@@ -411,38 +322,41 @@ export default function RemoveDuplicatesPage() {
             />
             Sort lines A–Z
           </label>
+          <label className="flex items-center gap-3 text-sm font-semibold text-zinc-700">
+            <input
+              type="checkbox"
+              checked={options.uniqueList}
+              onChange={() => updateOption("uniqueList")}
+              className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400"
+            />
+            Unique list mode
+          </label>
         </div>
 
         <div className="flex flex-wrap gap-3">
           <Button onClick={applyUniqueListPreset} variant="secondary">
             Unique list preset
           </Button>
-          <Button onClick={handleProcess} variant="secondary">
-            Process
-          </Button>
           <Button onClick={handleClear} variant="secondary">
             Clear
           </Button>
-          <Button onClick={handleCopy} variant="secondary">
+          <Button onClick={() => handleCopy(result.output, "output")} variant="primary">
             Copy Output
-          </Button>
-          <Button onClick={handleDownload} variant="primary">
-            Download Output
           </Button>
         </div>
 
         <div className="grid gap-2 text-xs text-zinc-500 sm:grid-cols-2">
-          <p>Trim mode compares trimmed lines, while output keeps the original line.</p>
-          <p>When keep first is disabled, the last unique occurrence is kept.</p>
+          <p>Unique list mode removes duplicates and sorts output A–Z.</p>
           <p>Extra space removal collapses multiple spaces inside each line.</p>
-          <p>Sorting A–Z happens after duplicates are removed.</p>
+          <p>Remove empty lines keeps only the lines with text.</p>
+          <p>Sorting happens after cleanup to keep the list consistent.</p>
         </div>
       </section>
 
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
         <h2 className="text-lg font-semibold text-zinc-900">Try next</h2>
         <p className="mt-2 text-sm text-zinc-600">
-          Move to the next cleanup step in seconds.
+          Keep your cleanup workflow moving with another tool.
         </p>
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
           {tryNextRoutes.map((route) => (
@@ -450,7 +364,7 @@ export default function RemoveDuplicatesPage() {
               key={route}
               href={route}
               eventName="click_try_next"
-              eventProps={{ from: "remove-duplicates", to: route }}
+              eventProps={{ from: "text-cleaner", to: route }}
               className="underline"
             >
               {TOOL_BY_ROUTE[route]?.name}
@@ -464,7 +378,7 @@ export default function RemoveDuplicatesPage() {
           Popular use cases for this tool
         </h2>
         <p className="mt-2 text-sm text-zinc-600">
-          Clean lists with a focused workflow.
+          Clean lists and prep text for imports fast.
         </p>
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
           <Link className="underline" href="/use-cases/clean-dedupe">
@@ -494,7 +408,10 @@ export default function RemoveDuplicatesPage() {
                 {tip.title}
               </summary>
               <p className="mt-2 text-sm text-zinc-600">{tip.text}</p>
-              <Link className="mt-2 inline-flex text-sm font-semibold text-zinc-900 underline" href={tip.linkHref}>
+              <Link
+                className="mt-2 inline-flex text-sm font-semibold text-zinc-900 underline"
+                href={tip.linkHref}
+              >
                 {tip.linkLabel}
               </Link>
             </details>
@@ -504,9 +421,7 @@ export default function RemoveDuplicatesPage() {
 
       {hasUsed ? (
         <section className="rounded-3xl border border-zinc-200/80 bg-white p-5 text-sm text-zinc-600 shadow-sm">
-          <p className="font-semibold text-zinc-900">
-            Next, you might want to...
-          </p>
+          <p className="font-semibold text-zinc-900">Next, you might want to...</p>
           <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold text-zinc-600">
             {postAction.tools.map((route) => (
               <Link key={route} className="underline" href={route}>
@@ -547,12 +462,6 @@ export default function RemoveDuplicatesPage() {
           </Link>
         ))}
       </section>
-
-      {status ? (
-        <div className="fixed bottom-6 right-6 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 shadow-lg">
-          {status}
-        </div>
-      ) : null}
     </ToolLayout>
   );
 }

@@ -29,5 +29,11 @@ export const metadata: Metadata = {
 };
 
 export default function TextToSpeechUseCasesPage() {
-  return <UseCaseCategoryPage categorySlug="text-to-speech" />;
+  return (
+    <UseCaseCategoryPage
+      toolRoute="/text-to-speech"
+      title="Text to Speech Use Cases"
+      description="Listen to text for study, accessibility, and review."
+    />
+  );
 }

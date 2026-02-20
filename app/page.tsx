@@ -5,7 +5,7 @@ import {
   USE_CASE_BY_SLUG,
   USE_CASE_CATEGORIES,
 } from "../lib/use-cases";
-import { TOOLS } from "../lib/tools";
+import { CLUSTER_TOOLS, TOOL_BY_ROUTE } from "../lib/tools";
 import TrackedLink from "../components/TrackedLink";
 
 const HOME_JSON_LD = {
@@ -64,8 +64,8 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {TOOLS.map((tool) => (
+        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {CLUSTER_TOOLS.map((tool) => (
             <TrackedLink
               key={tool.route}
               href={tool.route}
@@ -96,6 +96,21 @@ export default function Home() {
             </TrackedLink>
           ))}
         </section>
+        <div className="text-sm font-semibold text-zinc-600">
+          Looking for audio?{" "}
+          <TrackedLink
+            href="/text-to-speech"
+            eventName="select_content"
+            eventProps={{
+              content_type: "tool",
+              item_id: "text-to-speech",
+              context: "home_tools_footer",
+            }}
+            className="text-zinc-900 underline"
+          >
+            {TOOL_BY_ROUTE["/text-to-speech"]?.name ?? "Text to Speech"}
+          </TrackedLink>
+        </div>
 
         <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
           <h2 className="text-lg font-semibold text-zinc-900">

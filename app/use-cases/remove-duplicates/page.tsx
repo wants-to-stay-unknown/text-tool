@@ -29,5 +29,11 @@ export const metadata: Metadata = {
 };
 
 export default function RemoveDuplicatesUseCasesPage() {
-  return <UseCaseCategoryPage categorySlug="remove-duplicates" />;
+  return (
+    <UseCaseCategoryPage
+      toolRoute="/remove-duplicates"
+      title="Remove Duplicate Lines Use Cases"
+      description="Clean lists, logs, and exports."
+    />
+  );
 }

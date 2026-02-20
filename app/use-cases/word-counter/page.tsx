@@ -32,5 +32,11 @@ export const metadata: Metadata = {
 };
 
 export default function WordCounterUseCasesPage() {
-  return <UseCaseCategoryPage categorySlug="word-counter" />;
+  return (
+    <UseCaseCategoryPage
+      toolRoute="/word-counter"
+      title="Word Counter Use Cases"
+      description="Browse word counter use cases for essays, posts, scripts, and more."
+    />
+  );
 }

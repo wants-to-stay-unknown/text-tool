@@ -22,7 +22,7 @@ const TOOL_JSON_LD = {
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Web",
   description:
-    "Count words, characters, and characters without spaces instantly in your browser.",
+    "Count words, characters, sentences, paragraphs, and timing estimates instantly in your browser.",
 };
 
 const FAQ_ITEMS = [
@@ -70,7 +70,7 @@ export default function WordCounterPage() {
   return (
     <ToolLayout
       title="Word Counter"
-      description="Paste or type your text to see live word and character counts."
+      description="Paste or type your text to see live word, sentence, paragraph, and timing counts."
       maxWidthClassName="max-w-4xl"
     >
       <AnalyticsEvent event="tool_page_view" props={{ tool: "word-counter" }} />
@@ -108,8 +108,8 @@ export default function WordCounterPage() {
           Jump into a real workflow and use the word counter in context.
         </p>
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
-          <Link className="underline" href="/use-cases/word-counter">
-            View all word counter use cases
+          <Link className="underline" href="/use-cases/word-limits">
+            View all word & limits use cases
           </Link>
           {popularUseCases.map((useCase) => (
             <Link

@@ -5,54 +5,76 @@ import {
   POPULAR_USE_CASE_SLUGS,
   USE_CASE_BY_SLUG,
   USE_CASE_CATEGORIES,
+  getUseCasesByCategorySlug,
   getUseCasesByToolRoute,
 } from "../lib/use-cases";
 import { TOOL_BY_ROUTE } from "../lib/tools";
 
 type UseCaseCategoryPageProps = {
-  categorySlug: string;
+  categorySlug?: string;
+  toolRoute?: string;
+  title?: string;
+  description?: string;
 };
 
 export default function UseCaseCategoryPage({
   categorySlug,
+  toolRoute,
+  title,
+  description,
 }: UseCaseCategoryPageProps) {
-  const category = USE_CASE_CATEGORIES.find(
-    (item) => item.slug === categorySlug,
-  );
+  const category = categorySlug
+    ? USE_CASE_CATEGORIES.find((item) => item.slug === categorySlug)
+    : null;
 
-  if (!category) {
-    return null;
-  }
-
-  const tool = TOOL_BY_ROUTE[category.toolRoute];
-  const useCases = getUseCasesByToolRoute(category.toolRoute);
+  const resolvedToolRoute = toolRoute ?? category?.toolRoutes[0];
+  const tool = resolvedToolRoute ? TOOL_BY_ROUTE[resolvedToolRoute] : null;
+  const useCases = categorySlug
+    ? getUseCasesByCategorySlug(categorySlug)
+    : resolvedToolRoute
+      ? getUseCasesByToolRoute(resolvedToolRoute)
+      : [];
   const popularUseCases = POPULAR_USE_CASE_SLUGS.map(
     (slug) => USE_CASE_BY_SLUG[slug],
   ).filter(Boolean);
 
   return (
     <ToolLayout
-      title={category.title}
-      description={category.description}
+      title={title ?? category?.title ?? "Use cases"}
+      description={description ?? category?.description ?? ""}
       maxWidthClassName="max-w-6xl"
     >
       <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Primary tool
+              {categorySlug ? "Tools in this category" : "Primary tool"}
             </p>
-            <p className="mt-2 text-lg font-semibold text-zinc-900">
-              {tool?.name}
-            </p>
-            <p className="mt-2 text-sm text-zinc-600">{tool?.description}</p>
+            {categorySlug ? (
+              <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold text-zinc-900">
+                {category?.toolRoutes.map((route) => (
+                  <Link key={route} className="underline" href={route}>
+                    {TOOL_BY_ROUTE[route]?.name}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <>
+                <p className="mt-2 text-lg font-semibold text-zinc-900">
+                  {tool?.name}
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">{tool?.description}</p>
+              </>
+            )}
           </div>
-          <Link
-            href={category.toolRoute}
-            className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
-          >
-            Open {tool?.name}
-          </Link>
+          {resolvedToolRoute ? (
+            <Link
+              href={resolvedToolRoute}
+              className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
+            >
+              Open {tool?.name}
+            </Link>
+          ) : null}
         </div>
       </section>
 
