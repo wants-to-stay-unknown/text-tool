@@ -98,4 +98,23 @@ export const CLUSTERS: Cluster[] = [
       },
     ],
   },
+  {
+    slug: "text-to-speech",
+    title: "Text to Speech",
+    description:
+      "convert text to speech with different audio",
+    useCaseCategoryTitle: "Clean & Dedupe Use Cases",
+    useCaseCategoryDescription:
+      "Text to Speech",
+    tools: [
+      {
+        slug: "text-to-speech-tool",
+        name: "Text to Speech",
+        route: "/text-to-speech",
+        description: "convert text to speech with different audio",
+        benefit: "Text to speech",
+        ctaLabel: "Text to Speech",
+      }
+    ],
+  },
 ];

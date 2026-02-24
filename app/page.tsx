@@ -26,6 +26,39 @@ export default function Home() {
           {JSON.stringify(HOME_JSON_LD)}
         </script>
 
+        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {CLUSTER_TOOLS.map((tool) => (
+            <TrackedLink
+              key={tool.route}
+              href={tool.route}
+              eventName="select_content"
+              eventProps={{
+                content_type: "tool",
+                item_id: tool.slug,
+                context: "home_tool_card",
+              }}
+              className="group rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:border-zinc-300 hover:shadow-[0_28px_70px_-35px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 text-sm font-semibold text-white">
+                {tool.name
+                  .split(" ")
+                  .map((word) => word[0])
+                  .join("")}
+              </div>
+              <h3 className="mt-5 text-lg font-semibold text-zinc-900">
+                {tool.name}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                {tool.description}
+              </p>
+              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900 transition group-hover:text-zinc-700">
+                {tool.ctaLabel}
+                <span className="text-base leading-none">→</span>
+              </span>
+            </TrackedLink>
+          ))}
+        </section>
+
         <header className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/70 p-10 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.4)] backdrop-blur">
           <div className="pointer-events-none absolute -top-24 right-10 h-56 w-56 rounded-full bg-gradient-to-br from-indigo-200/70 via-sky-200/70 to-transparent blur-2xl" />
           <div className="pointer-events-none absolute -bottom-32 left-0 h-64 w-64 rounded-full bg-gradient-to-br from-rose-200/60 via-amber-200/60 to-transparent blur-2xl" />
@@ -64,39 +97,7 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {CLUSTER_TOOLS.map((tool) => (
-            <TrackedLink
-              key={tool.route}
-              href={tool.route}
-              eventName="select_content"
-              eventProps={{
-                content_type: "tool",
-                item_id: tool.slug,
-                context: "home_tool_card",
-              }}
-              className="group rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:border-zinc-300 hover:shadow-[0_28px_70px_-35px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 text-sm font-semibold text-white">
-                {tool.name
-                  .split(" ")
-                  .map((word) => word[0])
-                  .join("")}
-              </div>
-              <h3 className="mt-5 text-lg font-semibold text-zinc-900">
-                {tool.name}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                {tool.description}
-              </p>
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-900 transition group-hover:text-zinc-700">
-                {tool.ctaLabel}
-                <span className="text-base leading-none">→</span>
-              </span>
-            </TrackedLink>
-          ))}
-        </section>
-        <div className="text-sm font-semibold text-zinc-600">
+        {/* <div className="text-sm font-semibold text-zinc-600">
           Looking for audio?{" "}
           <TrackedLink
             href="/text-to-speech"
@@ -110,7 +111,7 @@ export default function Home() {
           >
             {TOOL_BY_ROUTE["/text-to-speech"]?.name ?? "Text to Speech"}
           </TrackedLink>
-        </div>
+        </div> */}
 
         <section className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
           <h2 className="text-lg font-semibold text-zinc-900">
